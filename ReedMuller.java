@@ -19,15 +19,29 @@ public class ReedMuller {
         printMatrix(generatorMatrix);
 
         // Step 3: Input vector
-        System.out.print("Įveskite informacijos vektorių (" + rows + " ilgio): ");
+        System.out.print("Įveskite informacijos vektorių (" + rows + " ilgio)\n");
         int[] inputVector = new int[rows];
+
         for (int i = 0; i < rows; i++) {
-            inputVector[i] = scanner.nextInt();
+            int input;
+            while (true) { // Kartojama, kol įvestis teisinga
+                System.out.print("Įveskite " + (i + 1) + "-ąjį elementą (0 arba 1): ");
+                if (scanner.hasNextInt()) {  // Tikrina, ar įvestis yra sveikasis skaičius
+                    input = scanner.nextInt();
+                    if (input == 0 || input == 1) {
+                        break; // Teisinga reikšmė, baigiame ciklą
+                    } else {
+                        System.out.println("Klaida: Vektoriaus elementai turi būti tik 0 arba 1.");
+                    }
+                } else {
+                    System.out.println("Klaida: Įvestis turi būti sveikasis skaičius (0 arba 1).");
+                    scanner.next(); // Pašalinama neteisinga įvestis
+                }
+            }
+            inputVector[i] = input;
         }
-        if (inputVector.length != rows) {
-            System.out.println("Vektoriaus ilgis neteisingas. Jis turi būti " + rows);
-            return;
-        }
+        System.out.println("Įvestas vektorius: " + Arrays.toString(inputVector));
+
 
         // Step 4: Input error probability
         System.out.print("Įveskite klaidos tikimybę (0 <= p_e <= 1): ");
@@ -53,8 +67,20 @@ public class ReedMuller {
         if (editChoice.equalsIgnoreCase("taip")) {
             System.out.println("Įveskite naują vektorių (" + columns + " ilgio):");
             for (int i = 0; i < columns; i++) {
-                receivedVector[i] = scanner.nextInt();
+                int input;
+                while (true) { // Kartojama, kol įvedama teisinga reikšmė
+                    System.out.print("Įveskite " + (i + 1) + "-ąjį elementą (0 arba 1): ");
+                    input = scanner.nextInt();
+                    if (input == 0 || input == 1) {
+                        break; // Teisinga reikšmė, baigiame ciklą
+                    } else {
+                        System.out.println("Klaida: Įvestas skaičius turi būti 0 arba 1.");
+                    }
+                }
+                receivedVector[i] = input;
             }
+            System.out.println("Naujas vektorius po redagavimo:");
+            System.out.println(Arrays.toString(receivedVector));
         }
 
         // Step 7: Decode the vector
