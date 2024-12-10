@@ -84,7 +84,7 @@ public class ReedMuller {
         }
 
         // Step 7: Decode the vector
-        int[] decodedVector = decodeVector(receivedVector, m);
+        int[] decodedVector = HadamardDecoder.decodeVector(receivedVector, m);
         System.out.println("Dekoduotas vektorius:");
         System.out.println(Arrays.toString(decodedVector));
 
@@ -141,67 +141,91 @@ public class ReedMuller {
         return transmitted;
     }
 
-    private static int[] decodeVector(int[] receivedVector, int m) {
-        int columns = (int) Math.pow(2, m);
-        int rows = m + 1;
+    public class HadamardDecoder {
+        public static void main(String[] args) {
+            int m = 2; // Pavyzdžiui, m=2, todėl vektoriaus ilgis 4
+            int[] receivedVector = {1, 0, 1, 0}; // Įsitikinkite, kad ilgis yra 2^m
 
-        // Patikrinimas, ar vektoriaus ilgis teisingas
-        if (receivedVector.length != columns) {
-            throw new IllegalArgumentException("Vektoriaus ilgis turi būti lygus 2^m.");
-        }
-
-        System.out.println("Pradinis vektorius dekodavimui: " + Arrays.toString(receivedVector));
-
-        // Hadamardo transformacija
-        int[] hadamard = hadamardTransform(receivedVector);
-
-        System.out.println("Hadamardo transformacijos rezultatas: " + Arrays.toString(hadamard));
-
-        // Rasti maksimalų indeksą pagal absoliučią reikšmę
-        int maxIndex = 0;
-        int maxValue = Math.abs(hadamard[0]);
-        for (int i = 1; i < columns; i++) {
-            if (Math.abs(hadamard[i]) > maxValue) {
-                maxValue = Math.abs(hadamard[i]);
-                maxIndex = i;
+            try {
+                int[] decoded = decodeVector(receivedVector, m);
+                System.out.println("Dekoduotas vektorius: " + Arrays.toString(decoded));
+            } catch (IllegalArgumentException e) {
+                System.err.println(e.getMessage());
             }
         }
 
-        System.out.println("Maksimali reikšmė: " + maxValue + ", indeksas: " + maxIndex);
+        private static int[] decodeVector(int[] receivedVector, int m) {
+            int columns = (int) Math.pow(2, m);
+            int rows = m;
 
-        // Indeksą paversti į dvejetainį formatą
-        String binary = Integer.toBinaryString(maxIndex);
-        while (binary.length() < rows) {
-            binary = "0" + binary; // Papildome nuliais, jei trūksta bitų
-        }
+            // Patikrinimas, ar vektoriaus ilgis teisingas
+            if (receivedVector.length != columns) {
+                throw new IllegalArgumentException("Vektoriaus ilgis turi būti lygus 2^m.");
+            }
 
-        System.out.println("Maksimalus indeksas dvejetainiu formatu: " + binary);
+            System.out.println("Pradinis vektorius dekodavimui: " + Arrays.toString(receivedVector));
 
-        // Dekodavimas pagal Hadamardo transformacijos koeficientus
-        int[] decoded = new int[rows];
-        for (int i = 0; i < rows; i++) {
-            decoded[i] = hadamard[maxIndex] > 0 ? 1 : 0;
-        }
+            // Konvertuojame į bipolarinius signalus (-1, 1)
+            int[] bipolarVector = mapToBipolar(receivedVector);
+            System.out.println("Bipolarinis vektorius: " + Arrays.toString(bipolarVector));
 
-        System.out.println("Dekoduotas vektorius: " + Arrays.toString(decoded));
-        return decoded;
-    }
+            // Hadamardo transformacija
+            int[] hadamard = hadamardTransform(bipolarVector);
+            System.out.println("Hadamardo transformacijos rezultatas: " + Arrays.toString(hadamard));
 
-    private static int[] hadamardTransform(int[] vector) {
-        int n = vector.length;
-        int[] transformed = Arrays.copyOf(vector, n);
-
-        for (int size = 1; size < n; size *= 2) {
-            for (int i = 0; i < n; i += 2 * size) {
-                for (int j = i; j < i + size; j++) {
-                    int temp = transformed[j];
-                    transformed[j] += transformed[j + size];
-                    transformed[j + size] = temp - transformed[j + size];
+            // Rasti maksimalų indeksą pagal absoliučią reikšmę
+            int maxIndex = 0;
+            int maxValue = Math.abs(hadamard[0]);
+            for (int i = 1; i < columns; i++) {
+                if (Math.abs(hadamard[i]) > maxValue) {
+                    maxValue = Math.abs(hadamard[i]);
+                    maxIndex = i;
                 }
             }
+
+            System.out.println("Maksimali reikšmė: " + maxValue + ", indeksas: " + maxIndex);
+
+            // Indeksą paversti į dvejetainį formatą
+            String binary = Integer.toBinaryString(maxIndex);
+            while (binary.length() < rows) {
+                binary = "0" + binary; // Papildome nuliais, jei trūksta bitų
+            }
+
+            System.out.println("Maksimalus indeksas dvejetainiu formatu: " + binary);
+
+            // Dekodavimas pagal Hadamardo transformacijos koeficientus
+            int[] decoded = new int[rows];
+            for (int i = 0; i < rows; i++) {
+                decoded[i] = binary.charAt(rows - 1 - i) == '1' ? 1 : 0;
+            }
+
+            return decoded;
         }
 
-        return transformed;
+        private static int[] hadamardTransform(int[] vector) {
+            int n = vector.length;
+            int[] transformed = Arrays.copyOf(vector, n);
+
+            for (int size = 1; size < n; size *= 2) {
+                for (int i = 0; i < n; i += 2 * size) {
+                    for (int j = i; j < i + size; j++) {
+                        int temp = transformed[j];
+                        transformed[j] += transformed[j + size];
+                        transformed[j + size] = temp - transformed[j + size];
+                    }
+                }
+            }
+
+            return transformed;
+        }
+
+        private static int[] mapToBipolar(int[] binaryVector) {
+            int[] bipolar = new int[binaryVector.length];
+            for (int i = 0; i < binaryVector.length; i++) {
+                bipolar[i] = binaryVector[i] == 0 ? -1 : 1;
+            }
+            return bipolar;
+        }
     }
 
 
