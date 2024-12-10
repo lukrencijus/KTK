@@ -21,12 +21,12 @@ public class ReedMuller {
 
         for (int i = 0; i < rows; i++) {
             int input;
-            while (true) { // Kartojama, kol įvestis teisinga
+            while (true) {
                 System.out.print("Įveskite " + (i + 1) + "-ąjį elementą (0 arba 1): ");
-                if (scanner.hasNextInt()) {  // Tikrina, ar įvestis yra sveikasis skaičius
+                if (scanner.hasNextInt()) {
                     input = scanner.nextInt();
                     if (input == 0 || input == 1) {
-                        break; // Teisinga reikšmė, baigiame ciklą
+                        break;
                     } else {
                         System.out.println("Klaida: Vektoriaus elementai turi būti tik 0 arba 1.");
                     }
@@ -34,7 +34,7 @@ public class ReedMuller {
             }
             inputVector[i] = input;
         }
-        System.out.println("Įvestas vektorius: " + Arrays.toString(inputVector));
+        System.out.println("\nĮvestas vektorius: " + Arrays.toString(inputVector));
 
         // Step 4: Input error probability
         scanner.nextLine();
@@ -56,6 +56,9 @@ public class ReedMuller {
         System.out.println("Iš kanalo išėjęs vektorius:");
         System.out.println(Arrays.toString(receivedVector));
 
+        // Step 8: Detect and report errors between encoded and received vector
+        detectErrors(encodedVector, receivedVector);
+
         // Allow user to edit received vector
         System.out.print("Ar norite redaguoti iš kanalo išėjusį vektorių? (taip/ne): ");
         String editChoice = scanner.next();
@@ -63,24 +66,25 @@ public class ReedMuller {
             System.out.println("Įveskite naują vektorių (" + columns + " ilgio):");
             for (int i = 0; i < columns; i++) {
                 int inputBit;
-                while (true) { // Kartojama, kol įvedama teisinga reikšmė
+                while (true) {
                     System.out.print("Įveskite " + (i + 1) + "-ąjį elementą (0 arba 1): ");
                     if (scanner.hasNextInt()) {
                         inputBit = scanner.nextInt();
                         if (inputBit == 0 || inputBit == 1) {
-                            break; // Teisinga reikšmė, baigiame ciklą
+                            break;
                         } else {
                             System.out.println("Klaida: Įvestas skaičius turi būti 0 arba 1.");
                         }
                     } else {
                         System.out.println("Klaida: Įvestis turi būti sveikasis skaičius (0 arba 1).");
-                        scanner.next(); // Pašalinama neteisinga įvestis
+                        scanner.next();
                     }
                 }
                 receivedVector[i] = inputBit;
             }
             System.out.println("Naujas vektorius po redagavimo:");
             System.out.println(Arrays.toString(receivedVector));
+            detectErrors(encodedVector, receivedVector);
         }
 
         // Step 7: Decode the vector
@@ -89,6 +93,28 @@ public class ReedMuller {
         System.out.println(Arrays.toString(decodedVector));
 
         scanner.close();
+    }
+
+    // Klaidų detekcijos funkcija
+    private static void detectErrors(int[] encodedVector, int[] receivedVector) {
+        int errorCount = 0;
+        StringBuilder errorPositions = new StringBuilder();
+
+        // Lyginame užkoduotą vektorių su iš kanalo gautu vektoriu
+        for (int i = 0; i < encodedVector.length; i++) {
+            if (encodedVector[i] != receivedVector[i]) {
+                errorCount++;
+                errorPositions.append(i).append(" ");
+            }
+        }
+
+        // Išvedame rezultatus
+        if (errorCount == 0) {
+            System.out.println("Klaidų nėra.");
+        } else {
+            System.out.println("Klaidų skaičius: " + errorCount);
+            System.out.println("Klaidos pozicijos: " + errorPositions.toString().trim());
+        }
     }
 
     // Generate Reed-Muller (1, m) generator matrix
@@ -111,7 +137,6 @@ public class ReedMuller {
 
         return generatorMatrix;
     }
-
 
     // Encode vector using the generator matrix
     private static int[] encodeVector(int[] vector, int[][] generatorMatrix) {
@@ -145,6 +170,7 @@ public class ReedMuller {
     private static int[] decodeVector(int[] receivedVector, int m) {
         int n = receivedVector.length;
 
+
         // Žingsnis 1: Mapavimas 0 -> 1 ir 1 -> -1
         double[] mapped = new double[n];
         for (int i = 0; i < n; i++) {
@@ -153,6 +179,9 @@ public class ReedMuller {
 
         // Žingsnis 2: Atlikti Fast Hadamard Transform
         double[] transformed = fastHadamardTransform(mapped);
+
+        // Išspausdinti transformuotą vektorių
+        System.out.println("Transformuotas vektorius: " + Arrays.toString(transformed));
 
         // Žingsnis 3: Surasti indeksą su maksimaliu absoliučiu koeficientu
         double maxVal = Math.abs(transformed[0]);
@@ -164,6 +193,7 @@ public class ReedMuller {
                 maxIndex = i;
             }
         }
+        System.out.println("Maksimali reikšmė: " + maxVal + ", indeksas: " + maxIndex);
 
         // Žingsnis 4: Atkuriame informacijos bitus
         int[] infoBits = new int[m + 1];
