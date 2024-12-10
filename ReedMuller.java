@@ -84,7 +84,7 @@ public class ReedMuller {
         }
 
         // Step 7: Decode the vector
-        int[] decodedVector = HadamardDecoder.decodeVector(receivedVector, m);
+        int[] decodedVector = decodeVector(receivedVector, m);
         System.out.println("Dekoduotas vektorius:");
         System.out.println(Arrays.toString(decodedVector));
 
@@ -141,93 +141,72 @@ public class ReedMuller {
         return transmitted;
     }
 
-    public class HadamardDecoder {
-        public static void main(String[] args) {
-            int m = 2; // Pavyzdžiui, m=2, todėl vektoriaus ilgis 4
-            int[] receivedVector = {1, 0, 1, 0}; // Įsitikinkite, kad ilgis yra 2^m
+    // Dekodavimo funkcija naudojanti Fast Hadamard Transform (FHT)
+    private static int[] decodeVector(int[] receivedVector, int m) {
+        int n = receivedVector.length;
 
-            try {
-                int[] decoded = decodeVector(receivedVector, m);
-                System.out.println("Dekoduotas vektorius: " + Arrays.toString(decoded));
-            } catch (IllegalArgumentException e) {
-                System.err.println(e.getMessage());
+        // Žingsnis 1: Mapavimas 0 -> 1 ir 1 -> -1
+        double[] mapped = new double[n];
+        for (int i = 0; i < n; i++) {
+            mapped[i] = (receivedVector[i] == 0) ? 1.0 : -1.0;
+        }
+
+        // Žingsnis 2: Atlikti Fast Hadamard Transform
+        double[] transformed = fastHadamardTransform(mapped);
+
+// Žingsnis 3: Surasti indeksą su maksimaliu absoliučiu koeficientu
+        double maxVal = Math.abs(transformed[0]);
+        int maxIndex = 0;
+        for (int i = 1; i < transformed.length; i++) { // Pradėti nuo 1, nes pirmasis jau naudojamas
+            double currentAbs = Math.abs(transformed[i]);
+            if (currentAbs > maxVal) {
+                maxVal = currentAbs;
+                maxIndex = i;
             }
         }
 
-        private static int[] decodeVector(int[] receivedVector, int m) {
-            int columns = (int) Math.pow(2, m);
-            int rows = m;
 
-            // Patikrinimas, ar vektoriaus ilgis teisingas
-            if (receivedVector.length != columns) {
-                throw new IllegalArgumentException("Vektoriaus ilgis turi būti lygus 2^m.");
-            }
 
-            System.out.println("Pradinis vektorius dekodavimui: " + Arrays.toString(receivedVector));
+        // Žingsnis 4: Atkuriame informacijos bitus
+        int[] infoBits = new int[m + 1];
 
-            // Konvertuojame į bipolarinius signalus (-1, 1)
-            int[] bipolarVector = mapToBipolar(receivedVector);
-            System.out.println("Bipolarinis vektorius: " + Arrays.toString(bipolarVector));
+        // b0 nustatomas pagal koeficiento ženklą
+        infoBits[0] = (transformed[maxIndex] >= 0) ? 0 : 1;
 
-            // Hadamardo transformacija
-            int[] hadamard = hadamardTransform(bipolarVector);
-            System.out.println("Hadamardo transformacijos rezultatas: " + Arrays.toString(hadamard));
-
-            // Rasti maksimalų indeksą pagal absoliučią reikšmę
-            int maxIndex = 0;
-            int maxValue = Math.abs(hadamard[0]);
-            for (int i = 1; i < columns; i++) {
-                if (Math.abs(hadamard[i]) > maxValue) {
-                    maxValue = Math.abs(hadamard[i]);
-                    maxIndex = i;
-                }
-            }
-
-            System.out.println("Maksimali reikšmė: " + maxValue + ", indeksas: " + maxIndex);
-
-            // Indeksą paversti į dvejetainį formatą
-            String binary = Integer.toBinaryString(maxIndex);
-            while (binary.length() < rows) {
-                binary = "0" + binary; // Papildome nuliais, jei trūksta bitų
-            }
-
-            System.out.println("Maksimalus indeksas dvejetainiu formatu: " + binary);
-
-            // Dekodavimas pagal Hadamardo transformacijos koeficientus
-            int[] decoded = new int[rows];
-            for (int i = 0; i < rows; i++) {
-                decoded[i] = binary.charAt(rows - 1 - i) == '1' ? 1 : 0;
-            }
-
-            return decoded;
+        // b1 iki bm nustatomi iš maksimalaus indekso bitų reprezentacijos
+        for (int i = 1; i <= m; i++) {
+            infoBits[i] = (maxIndex >> (i - 1)) & 1;
         }
 
-        private static int[] hadamardTransform(int[] vector) {
-            int n = vector.length;
-            int[] transformed = Arrays.copyOf(vector, n);
-
-            for (int size = 1; size < n; size *= 2) {
-                for (int i = 0; i < n; i += 2 * size) {
-                    for (int j = i; j < i + size; j++) {
-                        int temp = transformed[j];
-                        transformed[j] += transformed[j + size];
-                        transformed[j + size] = temp - transformed[j + size];
-                    }
-                }
-            }
-
-            return transformed;
-        }
-
-        private static int[] mapToBipolar(int[] binaryVector) {
-            int[] bipolar = new int[binaryVector.length];
-            for (int i = 0; i < binaryVector.length; i++) {
-                bipolar[i] = binaryVector[i] == 0 ? -1 : 1;
-            }
-            return bipolar;
-        }
+        return infoBits;
     }
 
+    // Fast Hadamard Transform (iteratyvi implementacija)
+    private static double[] fastHadamardTransform(double[] a) {
+        int n = a.length;
+
+        // Patikriname, ar n yra 2^k
+        if ((n & (n - 1)) != 0) {
+            throw new IllegalArgumentException("Vektoriaus ilgis turi būti 2^k.");
+        }
+
+        // Kopijuojame pradinį vektorių
+        double[] A = Arrays.copyOf(a, n);
+
+        // Atlikti FHT
+        for (int step = 1; step < n; step <<= 1) {
+            for (int i = 0; i < n; i += 2 * step) {
+                for (int j = 0; j < step; j++) {
+                    double u = A[i + j];
+                    double v = A[i + j + step];
+                    A[i + j] = u + v;
+                    A[i + j + step] = u - v;
+                }
+            }
+        }
+
+        return A;
+    }
 
 
     // Utility function to print a matrix
