@@ -7,18 +7,15 @@ public class ReedMuller {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Step 1: Input m
-        System.out.print("Įveskite kodo parametrą m: ");
+        System.out.print("\nReed-Muller kodui (1, m)\nĮveskite kodo parametrą m: ");
         int m = scanner.nextInt();
         int columns = (int) Math.pow(2, m);
         int rows = m + 1;
 
-        // Step 2: Generate Reed-Muller matrix
         int[][] generatorMatrix = generateReedMullerMatrix(m);
         System.out.println("Rydo-Miulerio generuojanti matrica:");
         printMatrix(generatorMatrix);
 
-        // Step 3: Input vector
         System.out.print("Įveskite informacijos vektorių (" + rows + " ilgio)\n");
         int[] inputVector = new int[rows];
 
@@ -33,17 +30,14 @@ public class ReedMuller {
                     } else {
                         System.out.println("Klaida: Vektoriaus elementai turi būti tik 0 arba 1.");
                     }
-                } else {
-                    System.out.println("Klaida: Įvestis turi būti sveikasis skaičius (0 arba 1).");
-                    scanner.next(); // Pašalinama neteisinga įvestis
                 }
             }
             inputVector[i] = input;
         }
         System.out.println("Įvestas vektorius: " + Arrays.toString(inputVector));
 
-
         // Step 4: Input error probability
+        scanner.nextLine();
         System.out.print("Įveskite klaidos tikimybę (0 <= p_e <= 1): ");
         double pe = scanner.nextDouble();
         if (pe < 0 || pe > 1) {
