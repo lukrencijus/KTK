@@ -48,6 +48,7 @@ public class ReedMuller {
         double pe = scanner.nextDouble();
         if (pe < 0 || pe > 1) {
             System.out.println("Klaidos tikimybė turi būti tarp 0 ir 1.");
+            scanner.close();
             return;
         }
 
@@ -67,17 +68,22 @@ public class ReedMuller {
         if (editChoice.equalsIgnoreCase("taip")) {
             System.out.println("Įveskite naują vektorių (" + columns + " ilgio):");
             for (int i = 0; i < columns; i++) {
-                int input;
+                int inputBit;
                 while (true) { // Kartojama, kol įvedama teisinga reikšmė
                     System.out.print("Įveskite " + (i + 1) + "-ąjį elementą (0 arba 1): ");
-                    input = scanner.nextInt();
-                    if (input == 0 || input == 1) {
-                        break; // Teisinga reikšmė, baigiame ciklą
+                    if (scanner.hasNextInt()) {
+                        inputBit = scanner.nextInt();
+                        if (inputBit == 0 || inputBit == 1) {
+                            break; // Teisinga reikšmė, baigiame ciklą
+                        } else {
+                            System.out.println("Klaida: Įvestas skaičius turi būti 0 arba 1.");
+                        }
                     } else {
-                        System.out.println("Klaida: Įvestas skaičius turi būti 0 arba 1.");
+                        System.out.println("Klaida: Įvestis turi būti sveikasis skaičius (0 arba 1).");
+                        scanner.next(); // Pašalinama neteisinga įvestis
                     }
                 }
-                receivedVector[i] = input;
+                receivedVector[i] = inputBit;
             }
             System.out.println("Naujas vektorius po redagavimo:");
             System.out.println(Arrays.toString(receivedVector));
@@ -141,7 +147,7 @@ public class ReedMuller {
         return transmitted;
     }
 
-    // Dekodavimo funkcija naudojanti Fast Hadamard Transform (FHT)
+    // Decode vector using Fast Hadamard Transform
     private static int[] decodeVector(int[] receivedVector, int m) {
         int n = receivedVector.length;
 
@@ -154,10 +160,10 @@ public class ReedMuller {
         // Žingsnis 2: Atlikti Fast Hadamard Transform
         double[] transformed = fastHadamardTransform(mapped);
 
-// Žingsnis 3: Surasti indeksą su maksimaliu absoliučiu koeficientu
+        // Žingsnis 3: Surasti indeksą su maksimaliu absoliučiu koeficientu
         double maxVal = Math.abs(transformed[0]);
         int maxIndex = 0;
-        for (int i = 1; i < transformed.length; i++) { // Pradėti nuo 1, nes pirmasis jau naudojamas
+        for (int i = 1; i < transformed.length; i++) {
             double currentAbs = Math.abs(transformed[i]);
             if (currentAbs > maxVal) {
                 maxVal = currentAbs;
@@ -165,17 +171,15 @@ public class ReedMuller {
             }
         }
 
-
-
         // Žingsnis 4: Atkuriame informacijos bitus
         int[] infoBits = new int[m + 1];
 
         // b0 nustatomas pagal koeficiento ženklą
         infoBits[0] = (transformed[maxIndex] >= 0) ? 0 : 1;
 
-        // b1 iki bm nustatomi iš maksimalaus indekso bitų reprezentacijos
+        // b1 iki bm nustatomi iš maksimalaus indekso bitų reprezentacijos (nuo MSB iki LSB)
         for (int i = 1; i <= m; i++) {
-            infoBits[i] = (maxIndex >> (i - 1)) & 1;
+            infoBits[i] = (maxIndex >> (m - i)) & 1;
         }
 
         return infoBits;
@@ -207,7 +211,6 @@ public class ReedMuller {
 
         return A;
     }
-
 
     // Utility function to print a matrix
     private static void printMatrix(int[][] matrix) {
