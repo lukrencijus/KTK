@@ -92,7 +92,7 @@ public class ReedMuller {
     }
 
     // Generate Reed-Muller (1, m) generator matrix
-    private static int[][] generateReedMullerMatrix(int m) {
+    public static int[][] generateReedMullerMatrix(int m) {
         int columns = (int) Math.pow(2, m);
         int rows = m + 1;
 
@@ -103,9 +103,11 @@ public class ReedMuller {
 
         // Kitos eilutės atitinka dvejetainius derinius
         for (int i = 0; i < m; i++) {
-            int period = (int) Math.pow(2, m - i - 1);
+            int period = (int) Math.pow(2, i + 1);
+            int halfPeriod = period / 2;
+
             for (int j = 0; j < columns; j++) {
-                generatorMatrix[i + 1][j] = (j / period) % 2;
+                generatorMatrix[i + 1][j] = (j & (1 << i)) == 0 ? 0 : 1;
             }
         }
 
