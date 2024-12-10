@@ -12,7 +12,7 @@ public class ReedMuller {
         System.out.println("\n");
         System.out.println("Pasirinkite scenarijų:" +
                 "\n [1] užrašyti vektorių" +
-                "\n [2] užrašo tekstą" +
+                "\n [2] užrašyti tekstą" +
                 "\n [3] nurodyti paveiksliuką");
         int userInput = scanner.nextInt();
 
@@ -104,11 +104,12 @@ public class ReedMuller {
                 System.out.println(Arrays.toString(decodedVector));
 
                 scanner.close();
+                return;
 
             case 2:
                 System.out.print("\nReed-Muller kodui (1, m)\nĮveskite kodo parametrą m: ");
                 m = scanner.nextInt();
-                System.out.println("Įveskite tekstą (galite įvesti kelias eilutes). Pabaigai įrašykite 'exit':");
+                System.out.println("Įveskite tekstą (galite įvesti kelias eilutes). Kad pabaigti rašyti naujoje eilutėje parašykite 'exit'");
 
                 // Naudotojo įvestis, kad įrašytų kelias eilutes
                 StringBuilder inputText = new StringBuilder();
@@ -117,18 +118,36 @@ public class ReedMuller {
                     inputText.append(line).append("\n");
                 }
 
-// Paverčiame naudotojo įvestą tekstą į binary ASCII
+                // Paverčiame naudotojo įvestą tekstą į binary ASCII
                 String binaryText = textToBinary(inputText.toString());
 
                 // Spausdiname binarinį tekstą
                 System.out.println("Binarinis tekstas: " + binaryText);
 
                 // Suskaidome binarinį tekstą į vektorius ilgio 2^m
-                int[][] vectors = splitIntoVectors(binaryText, m);
+                int[] vectors = splitIntoVectors(binaryText, m);
 
-                // Spausdiname suskaidytus vektorius gražia forma
                 System.out.println("Suskaidyti vektoriai:");
-                printMatrix(vectors);
+                System.out.println(Arrays.toString(vectors));
+
+                System.out.print("Įveskite klaidos tikimybę (0 <= p_e <= 1): ");
+                pe = scanner.nextDouble();
+                if (pe < 0 || pe > 1) {
+                    System.out.println("Klaidos tikimybė turi būti tarp 0 ir 1.");
+                    scanner.close();
+                    return;
+                }
+
+                generatorMatrix = generateReedMullerMatrix(m);
+                System.out.println("Rydo-Miulerio generuojanti matrica:");
+                printMatrix(generatorMatrix);
+
+
+                encodedVector = encodeVector(vectors, generatorMatrix);
+                System.out.println("Užkoduotas vektorius:");
+                System.out.println(Arrays.toString(encodedVector));
+
+
 
                 scanner.close();
 
@@ -161,11 +180,12 @@ public class ReedMuller {
     }
 
     // Suskaido binarinį tekstą į vektorius ilgio 2^m, užpildo nuliais, jei reikia
-    public static int[][] splitIntoVectors(String binaryText, int m) {
+    public static int[] splitIntoVectors(String binaryText, int m) {
         int vectorLength = (int) Math.pow(2, m);  // Vektoriaus ilgis = 2^m
         int numVectors = (int) Math.ceil((double) binaryText.length() / vectorLength);  // Apskaičiuojame, kiek vektorių reikės
 
-        int[][] vectors = new int[numVectors][vectorLength];
+        // Vektorių masyvas kaip viena ilga 1D masyvas
+        int[] vectors = new int[numVectors * vectorLength];
 
         // Suskaidome binarinį tekstą į vektorius
         for (int i = 0; i < numVectors; i++) {
@@ -180,9 +200,11 @@ public class ReedMuller {
             if (intVector.length < vectorLength) {
                 int[] filledVector = new int[vectorLength];
                 System.arraycopy(intVector, 0, filledVector, 0, intVector.length);
-                vectors[i] = filledVector;
+                // Pridedame vektorių į 1D masyvą
+                System.arraycopy(filledVector, 0, vectors, i * vectorLength, vectorLength);
             } else {
-                vectors[i] = intVector;
+                // Pridedame vektorių į 1D masyvą
+                System.arraycopy(intVector, 0, vectors, i * vectorLength, intVector.length);
             }
         }
 
