@@ -1,98 +1,167 @@
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.*;
 
 public class ReedMuller {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.print("\nReed-Muller kodui (1, m)\nĮveskite kodo parametrą m: ");
-        int m = scanner.nextInt();
-        int columns = (int) Math.pow(2, m);
-        int rows = m + 1;
+        System.out.println("\n");
+        System.out.println("Pasirinkite scenarijų:" +
+                "\n [1] užrašyti vektorių" +
+                "\n [2] užrašo tekstą" +
+                "\n [3] nurodyti paveiksliuką");
+        int userInput = scanner.nextInt();
 
-        int[][] generatorMatrix = generateReedMullerMatrix(m);
-        System.out.println("Rydo-Miulerio generuojanti matrica:");
-        printMatrix(generatorMatrix);
+        switch (userInput) {
+            case 1:
+                System.out.print("\nReed-Muller kodui (1, m)\nĮveskite kodo parametrą m: ");
+                int m = scanner.nextInt();
+                int columns = (int) Math.pow(2, m);
+                int rows = m + 1;
 
-        System.out.print("Įveskite informacijos vektorių (" + rows + " ilgio)\n");
-        int[] inputVector = new int[rows];
+                int[][] generatorMatrix = generateReedMullerMatrix(m);
+                System.out.println("Rydo-Miulerio generuojanti matrica:");
+                printMatrix(generatorMatrix);
 
-        for (int i = 0; i < rows; i++) {
-            int input;
-            while (true) {
-                System.out.print("Įveskite " + (i + 1) + "-ąjį elementą (0 arba 1): ");
-                if (scanner.hasNextInt()) {
-                    input = scanner.nextInt();
-                    if (input == 0 || input == 1) {
-                        break;
-                    } else {
-                        System.out.println("Klaida: Vektoriaus elementai turi būti tik 0 arba 1.");
-                    }
-                }
-            }
-            inputVector[i] = input;
-        }
-        System.out.println("\nĮvestas vektorius: " + Arrays.toString(inputVector));
+                System.out.print("Įveskite informacijos vektorių (" + rows + " ilgio)\n");
+                int[] inputVector = new int[rows];
 
-        // Step 4: Input error probability
-        scanner.nextLine();
-        System.out.print("Įveskite klaidos tikimybę (0 <= p_e <= 1): ");
-        double pe = scanner.nextDouble();
-        if (pe < 0 || pe > 1) {
-            System.out.println("Klaidos tikimybė turi būti tarp 0 ir 1.");
-            scanner.close();
-            return;
-        }
-
-        // Step 5: Encode the vector
-        int[] encodedVector = encodeVector(inputVector, generatorMatrix);
-        System.out.println("Užkoduotas vektorius:");
-        System.out.println(Arrays.toString(encodedVector));
-
-        // Step 6: Transmit through unreliable channel
-        int[] receivedVector = transmitVector(encodedVector, pe);
-        System.out.println("Iš kanalo išėjęs vektorius:");
-        System.out.println(Arrays.toString(receivedVector));
-
-        // Step 8: Detect and report errors between encoded and received vector
-        detectErrors(encodedVector, receivedVector);
-
-        // Allow user to edit received vector
-        System.out.print("Ar norite redaguoti iš kanalo išėjusį vektorių? (taip/ne): ");
-        String editChoice = scanner.next();
-        if (editChoice.equalsIgnoreCase("taip")) {
-            System.out.println("Įveskite naują vektorių (" + columns + " ilgio):");
-            for (int i = 0; i < columns; i++) {
-                int inputBit;
-                while (true) {
-                    System.out.print("Įveskite " + (i + 1) + "-ąjį elementą (0 arba 1): ");
-                    if (scanner.hasNextInt()) {
-                        inputBit = scanner.nextInt();
-                        if (inputBit == 0 || inputBit == 1) {
-                            break;
-                        } else {
-                            System.out.println("Klaida: Įvestas skaičius turi būti 0 arba 1.");
+                for (int i = 0; i < rows; i++) {
+                    int input;
+                    while (true) {
+                        System.out.print("Įveskite " + (i + 1) + "-ąjį elementą (0 arba 1): ");
+                        if (scanner.hasNextInt()) {
+                            input = scanner.nextInt();
+                            if (input == 0 || input == 1) {
+                                break;
+                            } else {
+                                System.out.println("Klaida: Vektoriaus elementai turi būti tik 0 arba 1.");
+                            }
                         }
-                    } else {
-                        System.out.println("Klaida: Įvestis turi būti sveikasis skaičius (0 arba 1).");
-                        scanner.next();
                     }
+                    inputVector[i] = input;
                 }
-                receivedVector[i] = inputBit;
-            }
-            System.out.println("Naujas vektorius po redagavimo:");
-            System.out.println(Arrays.toString(receivedVector));
-            detectErrors(encodedVector, receivedVector);
+                System.out.println("\nĮvestas vektorius: " + Arrays.toString(inputVector));
+
+                // Step 4: Input error probability
+                scanner.nextLine();
+                System.out.print("Įveskite klaidos tikimybę (0 <= p_e <= 1): ");
+                double pe = scanner.nextDouble();
+                if (pe < 0 || pe > 1) {
+                    System.out.println("Klaidos tikimybė turi būti tarp 0 ir 1.");
+                    scanner.close();
+                    return;
+                }
+
+                // Step 5: Encode the vector
+                int[] encodedVector = encodeVector(inputVector, generatorMatrix);
+                System.out.println("Užkoduotas vektorius:");
+                System.out.println(Arrays.toString(encodedVector));
+
+                // Step 6: Transmit through unreliable channel
+                int[] receivedVector = transmitVector(encodedVector, pe);
+                System.out.println("Iš kanalo išėjęs vektorius:");
+                System.out.println(Arrays.toString(receivedVector));
+
+                // Step 8: Detect and report errors between encoded and received vector
+                detectErrors(encodedVector, receivedVector);
+
+                // Allow user to edit received vector
+                System.out.print("Ar norite redaguoti iš kanalo išėjusį vektorių? (taip/ne): ");
+                String editChoice = scanner.next();
+                if (editChoice.equalsIgnoreCase("taip")) {
+                    System.out.println("Įveskite naują vektorių (" + columns + " ilgio):");
+                    for (int i = 0; i < columns; i++) {
+                        int inputBit;
+                        while (true) {
+                            System.out.print("Įveskite " + (i + 1) + "-ąjį elementą (0 arba 1): ");
+                            if (scanner.hasNextInt()) {
+                                inputBit = scanner.nextInt();
+                                if (inputBit == 0 || inputBit == 1) {
+                                    break;
+                                } else {
+                                    System.out.println("Klaida: Įvestas skaičius turi būti 0 arba 1.");
+                                }
+                            } else {
+                                System.out.println("Klaida: Įvestis turi būti sveikasis skaičius (0 arba 1).");
+                                scanner.next();
+                            }
+                        }
+                        receivedVector[i] = inputBit;
+                    }
+                    System.out.println("Naujas vektorius po redagavimo:");
+                    System.out.println(Arrays.toString(receivedVector));
+                    detectErrors(encodedVector, receivedVector);
+                }
+
+                // Step 7: Decode the vector
+                int[] decodedVector = decodeVector(receivedVector, m);
+                System.out.println("Dekoduotas vektorius:");
+                System.out.println(Arrays.toString(decodedVector));
+
+                scanner.close();
+
+            case 2:
+                System.out.println("Įveskite tekstą (galite įvesti kelias eilutes). Pabaigai įrašykite 'exit':");
+
+                // Naudotojo įvestis, kad įrašytų kelias eilutes
+                StringBuilder inputText = new StringBuilder();
+                String line;
+                while (!(line = scanner.nextLine()).equalsIgnoreCase("exit")) {
+                    inputText.append(line).append("\n");
+                }
+
+                // Nustatome kūno Fq elementų ilgį
+                int vectorLength = 5; // Pvz., vektoriai bus ilgio 5
+                int q = 2; // Kūnas F10 (skaitmenys nuo 0 iki 9)
+
+                // Konvertuojame tekstą į skaitmenis
+                List<Integer> vectorElements = convertTextToFq(inputText.toString(), q);
+
+                // Suskaidome į vektorius
+                List<List<Integer>> vectors = splitIntoVectors(vectorElements, vectorLength);
+
+                // Išvedame rezultatus
+                System.out.println("Gauti vektoriai:");
+                for (List<Integer> vector : vectors) {
+                    System.out.println(vector);
+                }
+
+                scanner.close();
+
+
+        } //baigiasi switch
+
+    }
+
+    // Funkcija konvertuoti tekstą į skaitmenis (kūnas F10)
+    public static List<Integer> convertTextToFq(String text, int q) {
+        List<Integer> elements = new ArrayList<>();
+
+        // Kiekvienas simbolis konvertuojamas į skaitmenį (ASCII vertė % q)
+        for (char c : text.toCharArray()) {
+            int element = c % q;  // Konvertuojame į skaitmenį F_q
+            elements.add(element);
         }
+        return elements;
+    }
 
-        // Step 7: Decode the vector
-        int[] decodedVector = decodeVector(receivedVector, m);
-        System.out.println("Dekoduotas vektorius:");
-        System.out.println(Arrays.toString(decodedVector));
+    // Funkcija suskaidyti į vektorius
+    public static List<List<Integer>> splitIntoVectors(List<Integer> elements, int vectorLength){
+        List<List<Integer>> vectors = new ArrayList<>();
 
-        scanner.close();
+        for (int i = 0; i < elements.size(); i += vectorLength) {
+            List<Integer> vector = new ArrayList<>();
+            for (int j = i; j < i + vectorLength && j < elements.size(); j++) {
+                vector.add(elements.get(j));
+            }
+            vectors.add(vector);
+        }
+        return vectors;
     }
 
     // Klaidų detekcijos funkcija
