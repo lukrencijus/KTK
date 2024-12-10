@@ -117,21 +117,18 @@ public class ReedMuller {
                     inputText.append(line).append("\n");
                 }
 
-                // Nustatome kūno Fq elementų ilgį
-                int vectorLength = (int) Math.pow(2, m);
-                int q = 2;
+// Paverčiame naudotojo įvestą tekstą į binary ASCII
+                String binaryText = textToBinary(inputText.toString());
 
-                // Konvertuojame tekstą į skaitmenis
-                List<Integer> vectorElements = convertTextToFq(inputText.toString(), q);
+                // Spausdiname binarinį tekstą
+                System.out.println("Binarinis tekstas: " + binaryText);
 
-                // Suskaidome į vektorius
-                List<List<Integer>> vectors = splitIntoVectors(vectorElements, vectorLength);
+                // Suskaidome binarinį tekstą į vektorius ilgio 2^m
+                int[][] vectors = splitIntoVectors(binaryText, m);
 
-                // Išvedame rezultatus
-                System.out.println("Gauti vektoriai:");
-                for (List<Integer> vector : vectors) {
-                    System.out.println(vector);
-                }
+                // Spausdiname suskaidytus vektorius gražia forma
+                System.out.println("Suskaidyti vektoriai:");
+                printMatrix(vectors);
 
                 scanner.close();
 
@@ -140,29 +137,55 @@ public class ReedMuller {
 
     }
 
-    // Funkcija konvertuoti tekstą į skaitmenis (kūnas F10)
-    public static List<Integer> convertTextToFq(String text, int q) {
-        List<Integer> elements = new ArrayList<>();
-
-        // Kiekvienas simbolis konvertuojamas į skaitmenį (ASCII vertė % q)
-        for (char c : text.toCharArray()) {
-            int element = c % q;  // Konvertuojame į skaitmenį F_q
-            elements.add(element);
-        }
-        return elements;
+    // Paverčia simbolį į 8-bitų binarinę formą (ASCII kodas)
+    public static String charToBinary(char c) {
+        return String.format("%8s", Integer.toBinaryString(c)).replace(' ', '0');
     }
 
-    // Funkcija suskaidyti į vektorius
-    public static List<List<Integer>> splitIntoVectors(List<Integer> elements, int vectorLength){
-        List<List<Integer>> vectors = new ArrayList<>();
-
-        for (int i = 0; i < elements.size(); i += vectorLength) {
-            List<Integer> vector = new ArrayList<>();
-            for (int j = i; j < i + vectorLength && j < elements.size(); j++) {
-                vector.add(elements.get(j));
-            }
-            vectors.add(vector);
+    // Paverčia tekstą į binarinį stringą
+    public static String textToBinary(String text) {
+        StringBuilder binaryText = new StringBuilder();
+        for (char c : text.toCharArray()) {
+            binaryText.append(charToBinary(c));
         }
+        return binaryText.toString();
+    }
+
+    // Paverčia binarinį stringą į tikrą masyvą (0 arba 1)
+    public static int[] binaryStringToIntArray(String binaryText) {
+        int[] intArray = new int[binaryText.length()];
+        for (int i = 0; i < binaryText.length(); i++) {
+            intArray[i] = binaryText.charAt(i) - '0'; // Paverčia '0' arba '1' į 0 arba 1
+        }
+        return intArray;
+    }
+
+    // Suskaido binarinį tekstą į vektorius ilgio 2^m, užpildo nuliais, jei reikia
+    public static int[][] splitIntoVectors(String binaryText, int m) {
+        int vectorLength = (int) Math.pow(2, m);  // Vektoriaus ilgis = 2^m
+        int numVectors = (int) Math.ceil((double) binaryText.length() / vectorLength);  // Apskaičiuojame, kiek vektorių reikės
+
+        int[][] vectors = new int[numVectors][vectorLength];
+
+        // Suskaidome binarinį tekstą į vektorius
+        for (int i = 0; i < numVectors; i++) {
+            int start = i * vectorLength;
+            int end = Math.min((i + 1) * vectorLength, binaryText.length());
+            String vector = binaryText.substring(start, end);
+
+            // Paverčiame vektorių į int masyvą ir užpildome nuliais, jei reikia
+            int[] intVector = binaryStringToIntArray(vector);
+
+            // Užpildome trūkstamus bitus nuliais, jei vektorius trumpesnis
+            if (intVector.length < vectorLength) {
+                int[] filledVector = new int[vectorLength];
+                System.arraycopy(intVector, 0, filledVector, 0, intVector.length);
+                vectors[i] = filledVector;
+            } else {
+                vectors[i] = intVector;
+            }
+        }
+
         return vectors;
     }
 
