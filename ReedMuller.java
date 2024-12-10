@@ -106,6 +106,8 @@ public class ReedMuller {
                 scanner.close();
 
             case 2:
+                System.out.print("\nReed-Muller kodui (1, m)\nĮveskite kodo parametrą m: ");
+                m = scanner.nextInt();
                 System.out.println("Įveskite tekstą (galite įvesti kelias eilutes). Pabaigai įrašykite 'exit':");
 
                 // Naudotojo įvestis, kad įrašytų kelias eilutes
@@ -116,8 +118,8 @@ public class ReedMuller {
                 }
 
                 // Nustatome kūno Fq elementų ilgį
-                int vectorLength = 5; // Pvz., vektoriai bus ilgio 5
-                int q = 2; // Kūnas F10 (skaitmenys nuo 0 iki 9)
+                int vectorLength = (int) Math.pow(2, m);
+                int q = 2;
 
                 // Konvertuojame tekstą į skaitmenis
                 List<Integer> vectorElements = convertTextToFq(inputText.toString(), q);
