@@ -159,10 +159,10 @@ public class ReedMuller {
 
                 int[][] decodedVectors = new int[vectors.length][];
 
-                System.out.println("Dekoduotas vektorius:");
+                System.out.println("Dekoduoti vektoriai:");
                 for (int i = 0; i < vectors.length; i++) {
-                    decodedVectors[i] = decodeVector(decodedVectors[i], m);
-                    System.out.println(Arrays.toString(decodedVectors[i]));
+                    decodedVectors[i] = decodeVector(receivedVectors[i], m);  // Decode the received vector (vectors[i])
+                    System.out.println(Arrays.toString(decodedVectors[i]));  // Print the decoded vector
                 }
 
                 scanner.close();
@@ -310,7 +310,7 @@ public class ReedMuller {
         double[] transformed = fastHadamardTransform(mapped);
 
         // Išspausdinti transformuotą vektorių
-        System.out.println("Transformuotas vektorius: " + Arrays.toString(transformed));
+        //System.out.println("Transformuotas vektorius: " + Arrays.toString(transformed));
 
         // Žingsnis 3: Surasti indeksą su maksimaliu absoliučiu koeficientu
         double maxVal = Math.abs(transformed[0]);
@@ -322,7 +322,7 @@ public class ReedMuller {
                 maxIndex = i;
             }
         }
-        System.out.println("Maksimali reikšmė: " + maxVal + ", indeksas: " + maxIndex);
+        //System.out.println("Maksimali reikšmė: " + maxVal + ", indeksas: " + maxIndex);
 
         // Žingsnis 4: Atkuriame informacijos bitus
         int[] infoBits = new int[m + 1];
