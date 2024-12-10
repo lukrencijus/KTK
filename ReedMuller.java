@@ -92,7 +92,7 @@ public class ReedMuller {
     }
 
     // Generate Reed-Muller (1, m) generator matrix
-    public static int[][] generateReedMullerMatrix(int m) {
+    private static int[][] generateReedMullerMatrix(int m) {
         int columns = (int) Math.pow(2, m);
         int rows = m + 1;
 
@@ -103,11 +103,9 @@ public class ReedMuller {
 
         // Kitos eilutės atitinka dvejetainius derinius
         for (int i = 0; i < m; i++) {
-            int period = (int) Math.pow(2, i + 1);
-            int halfPeriod = period / 2;
-
+            int period = (int) Math.pow(2, m - i - 1);
             for (int j = 0; j < columns; j++) {
-                generatorMatrix[i + 1][j] = (j & (1 << i)) == 0 ? 0 : 1;
+                generatorMatrix[i + 1][j] = (j / period) % 2;
             }
         }
 
@@ -145,27 +143,17 @@ public class ReedMuller {
 
     private static int[] decodeVector(int[] receivedVector, int m) {
         int columns = (int) Math.pow(2, m);
+        int rows = m + 1;
 
         // Patikrinimas, ar vektoriaus ilgis teisingas
         if (receivedVector.length != columns) {
             throw new IllegalArgumentException("Vektoriaus ilgis turi būti lygus 2^m.");
         }
 
-        int[] hadamard = Arrays.copyOf(receivedVector, columns);
-
         System.out.println("Pradinis vektorius dekodavimui: " + Arrays.toString(receivedVector));
 
-        // Greitoji Hadamardo transformacija
-        for (int len = 1; len < columns; len *= 2) {
-            for (int i = 0; i < columns; i += 2 * len) {
-                for (int j = 0; j < len; j++) {
-                    int a = hadamard[i + j];
-                    int b = hadamard[i + j + len];
-                    hadamard[i + j] = a + b; // Sumuojame reikšmes
-                    hadamard[i + j + len] = a - b; // Atimame reikšmes
-                }
-            }
-        }
+        // Hadamardo transformacija
+        int[] hadamard = hadamardTransform(receivedVector);
 
         System.out.println("Hadamardo transformacijos rezultatas: " + Arrays.toString(hadamard));
 
@@ -183,20 +171,37 @@ public class ReedMuller {
 
         // Indeksą paversti į dvejetainį formatą
         String binary = Integer.toBinaryString(maxIndex);
-        while (binary.length() < m + 1) {
+        while (binary.length() < rows) {
             binary = "0" + binary; // Papildome nuliais, jei trūksta bitų
         }
 
         System.out.println("Maksimalus indeksas dvejetainiu formatu: " + binary);
 
-        // Konvertuojame dvejetainį indeksą į dekoduotą vektorių
-        int[] decoded = new int[m + 1];
-        for (int i = 0; i < binary.length(); i++) {
-            decoded[i] = binary.charAt(i) - '0';
+        // Dekodavimas pagal Hadamardo transformacijos koeficientus
+        int[] decoded = new int[rows];
+        for (int i = 0; i < rows; i++) {
+            decoded[i] = hadamard[maxIndex] > 0 ? 1 : 0;
         }
 
         System.out.println("Dekoduotas vektorius: " + Arrays.toString(decoded));
         return decoded;
+    }
+
+    private static int[] hadamardTransform(int[] vector) {
+        int n = vector.length;
+        int[] transformed = Arrays.copyOf(vector, n);
+
+        for (int size = 1; size < n; size *= 2) {
+            for (int i = 0; i < n; i += 2 * size) {
+                for (int j = i; j < i + size; j++) {
+                    int temp = transformed[j];
+                    transformed[j] += transformed[j + size];
+                    transformed[j + size] = temp - transformed[j + size];
+                }
+            }
+        }
+
+        return transformed;
     }
 
 
