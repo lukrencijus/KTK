@@ -165,11 +165,43 @@ public class ReedMuller {
                     System.out.println(Arrays.toString(decodedVectors[i]));  // Print the decoded vector
                 }
 
+                String decodedText = decodedVectorsToString(decodedVectors);
+                System.out.println("Atkurtas tekstas: " + decodedText);
+
                 scanner.close();
                 return;
 
         } //baigiasi switch
 
+    }
+
+    private static String decodedVectorsToString(int[][] decodedVectors) {
+        // Sukuriame StringBuilder, kad galėtume lengvai sujungti binarines eilutes
+        StringBuilder binaryStringBuilder = new StringBuilder();
+
+        // Iteruojame per kiekvieną dekoduotą vektorių
+        for (int i = 0; i < decodedVectors.length; i++) {
+            // Kiekvienas vektorius - tai bitų masyvas
+            for (int j = 0; j < decodedVectors[i].length; j++) {
+                binaryStringBuilder.append(decodedVectors[i][j]);  // Pridedame kiekvieną bitą į bendrą eilutę
+            }
+        }
+
+        // Gauta binarinė eilutė
+        String binaryString = binaryStringBuilder.toString();
+        StringBuilder text = new StringBuilder();
+
+        // Dabar padalinsime binarinę eilutę į 8 bitų dalis ir paversime jas į simbolius
+        for (int i = 0; i < binaryString.length(); i += 8) {
+            // Paimame 8 bitų dalį
+            String byteString = binaryString.substring(i, Math.min(i + 8, binaryString.length()));
+
+            // Paverčiame binarinę eilutę į ASCII simbolį
+            int charCode = Integer.parseInt(byteString, 2);  // Paverčiame iš binarinės į sveikąjį skaičių
+            text.append((char) charCode);  // Paverčiame į simbolį ir pridedame prie galutinio teksto
+        }
+
+        return text.toString();  // Grąžiname atkurtą tekstą kaip eilutę
     }
 
     // Paverčia simbolį į 8-bitų binarinę formą (ASCII kodas)
@@ -309,9 +341,6 @@ public class ReedMuller {
         // Žingsnis 2: Atlikti Fast Hadamard Transform
         double[] transformed = fastHadamardTransform(mapped);
 
-        // Išspausdinti transformuotą vektorių
-        //System.out.println("Transformuotas vektorius: " + Arrays.toString(transformed));
-
         // Žingsnis 3: Surasti indeksą su maksimaliu absoliučiu koeficientu
         double maxVal = Math.abs(transformed[0]);
         int maxIndex = 0;
@@ -322,7 +351,6 @@ public class ReedMuller {
                 maxIndex = i;
             }
         }
-        //System.out.println("Maksimali reikšmė: " + maxVal + ", indeksas: " + maxIndex);
 
         // Žingsnis 4: Atkuriame informacijos bitus
         int[] infoBits = new int[m + 1];
