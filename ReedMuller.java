@@ -444,7 +444,7 @@ public class ReedMuller {
 
     // Funkcija, kuri paverčia simbolį į 8-bitų binary formą (ASCII kodas)
     public static String charToBinary(char c) {
-        return String.format("%8s", Integer.toBinaryString(c)).replace(' ', '0');
+        return String.format("%8s", Integer.toBinaryString(c)).replace(' ', '0');   // Padaromas 8 bitų ilgio binary stringas
     }
 
     // Funkcija, kuri paverčia tekstą į binary stringą
@@ -456,7 +456,7 @@ public class ReedMuller {
         return binaryText.toString();
     }
 
-    // Funkcija, kuri paverčia binary stringą į masyvą (0 arba 1)
+    // Funkcija, kuri paverčia binary stringą į binary masyvą
     public static int[] binaryStringToIntArray(String binaryText) {
         int[] intArray = new int[binaryText.length()];
         for (int i = 0; i < binaryText.length(); i++) {
@@ -576,7 +576,7 @@ public class ReedMuller {
         // Atliekame greitąją Hadamardo transformaciją
         double[] transformed = fastHadamardTransform(mapped);
 
-        // Surandame indeksą su maksimaliu absoliučiu koeficientu
+        // Surandame max reikšmę ir jos indeksą
         double maxVal = Math.abs(transformed[0]);
         int maxIndex = 0;
         for (int i = 1; i < transformed.length; i++) {
@@ -590,10 +590,10 @@ public class ReedMuller {
         // Atkuriame informacijos bitus
         int[] infoBits = new int[m + 1];
 
-        // Nustatome b0 pagal koeficiento ženklą
+        // Nustatome infoBits[0] pagal max reikšmės ženklą
         infoBits[0] = (transformed[maxIndex] >= 0) ? 0 : 1;
 
-        // b1 iki bm nustatome iš maksimalaus indekso bitų reprezentacijos (nuo MSB iki LSB)
+        // infoBits[1] iki infoBits[m] nustatome iš maksimalaus indekso bitų reprezentacijos (nuo MSB iki LSB)
         for (int i = 1; i <= m; i++) {
             infoBits[i] = (maxIndex >> (m - i)) & 1;
         }
@@ -604,22 +604,17 @@ public class ReedMuller {
     private static double[] fastHadamardTransform(double[] a) {
         int n = a.length;
 
-        // Patikriname, ar n yra 2^k
-        if ((n & (n - 1)) != 0) {
-            throw new IllegalArgumentException("Vektoriaus ilgis turi būti 2^k.");
-        }
-
         // Kopijuojame pradinį vektorių
         double[] A = Arrays.copyOf(a, n);
 
         // Atlikame FHT
-        for (int step = 1; step < n; step <<= 1) {
-            for (int i = 0; i < n; i += 2 * step) {
-                for (int j = 0; j < step; j++) {
-                    double u = A[i + j];
-                    double v = A[i + j + step];
-                    A[i + j] = u + v;
-                    A[i + j + step] = u - v;
+        for (int step = 1; step < n; step <<= 1) {  // Nurodo kiek elementų apdorojame vienu metu
+            for (int i = 0; i < n; i += 2 * step) { // Nurodo pradžią kiekvienai grupei
+                for (int j = 0; j < step; j++) {    // Apdorojame 'step' elementų poras
+                    double u = A[i + j];            // Pirmas elementas poroje
+                    double v = A[i + j + step];     // Antras elementas poroje
+                    A[i + j] = u + v;               // Sumuojame poras ir įrašome į pirmą vietą
+                    A[i + j + step] = u - v;        // Atimame poras ir ir įrašome į antrą vietą
                 }
             }
         }
