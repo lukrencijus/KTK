@@ -267,16 +267,33 @@ public class ReedMuller {
                         }
                         System.out.println("Dekoduoti vektoriai");
 
+                        // Sukuriame dvejetainį stringą iš dekoduotų vektorių
+                        StringBuilder stringBuilder = new StringBuilder();
+                        for (int i = 0; i < decodedVectors.length; i++) {
+                            for (int j = 0; j < decodedVectors[i].length; j++) {
+                                // Konvertuojame kiekvieną sveikąjį skaičių į dvejetainį stringą ir pridedame prie stringBuilder
+                                stringBuilder.append(Integer.toBinaryString(decodedVectors[i][j]));
+                            }
+                        }
+
+                        // Gauti dvejetainį stringą
+                        stringBinaryImage = stringBuilder.toString();
+
+                        int width = image.getWidth();
+                        int height = image.getHeight();
+
                         // Sukuriame BufferedImage
-                        image = createImageFromBinaryString(stringBinaryImage, 1920, 1280);
+                        image = createImageFromBinaryString(stringBinaryImage, width, height);
 
                         // Atvaizduojame paveikslėlį
                         displayImage(image);
                         System.out.println("\nRodomas dekoduotas paveikslėlis");
+                        frame.setAlwaysOnTop(true);  // Keep the window on top
                         frame.toFront();          // Bring the window to the front
                         frame.repaint();          // Ensure the window is redrawn
                         frame.requestFocus();     // Request focus to ensure it's active
                         frame.requestFocusInWindow();
+                        frame.setAlwaysOnTop(false);  // Keep the window on top
 
                     } catch (IOException e) {
                         // Jei nepavyksta nuskaityti paveikslėlio, parodykite klaidos pranešimą
@@ -286,6 +303,7 @@ public class ReedMuller {
                     }
                 } else {
                     System.out.println("Vartotojas atsisakė pasirinkti failą.");
+                    return;
                 }
 
         return;
