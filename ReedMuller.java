@@ -1,3 +1,9 @@
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -170,9 +176,160 @@ public class ReedMuller {
 
                 scanner.close();
                 return;
+            case 3:
+                System.out.print("\nReed-Muller kodui (1, m)\nĮveskite kodo parametrą m: ");
+                m = scanner.nextInt();
 
+                generatorMatrix = generateReedMullerMatrix(m);
+                System.out.println("Rydo-Miulerio generuojanti matrica:");
+                printMatrix(generatorMatrix);
+
+                System.out.println("\nPrašome pasirinkti BMP paveiksliuką");
+                // Sukuriame pagrindinį langą
+                JFrame frame = new JFrame("Paveikslėlio peržiūra");
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setSize(800, 600);  // Langas bus 800x600 dydžio
+
+                // Paprašome vartotojo pasirinkti failą
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setAcceptAllFileFilterUsed(false);
+                fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("BMP Paveikslėliai", "bmp"));
+
+                int returnValue = fileChooser.showOpenDialog(null);
+                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                    // Gaukite pasirinktą failą
+                    File selectedFile = fileChooser.getSelectedFile();
+
+                    try {
+                        // Nuskaitykite BMP failą į BufferedImage objektą
+                        BufferedImage image = ImageIO.read(selectedFile);
+
+                        // Konvertuojame paveikslėlį į binarų 1 ir 0 formatą
+                        int[][] binaryImage = convertToBinary(image);
+
+                        // Parodome originalų paveikslėlį
+                        ImageIcon imageIcon = new ImageIcon(image);
+                        JLabel label = new JLabel(imageIcon);
+                        frame.getContentPane().add(label, BorderLayout.CENTER);
+                        frame.setVisible(true);  // Rodyti langą
+
+                        // Išvedame binarinę versiją į konsolę (jei reikia tikrinti)
+                        //printBinaryImage(binaryImage);
+
+                        // Sukuriame StringBuilder ir užpildome jį binariniais duomenimis
+                        StringBuilder binaryImageSB = new StringBuilder();
+                        for (int[] row : binaryImage) {
+                            for (int value : row) {
+                                binaryImageSB.append(value);  // Pridedame kiekvieną 0 arba 1 reikšmę
+                            }
+                        }
+
+                        String stringBinaryImage = binaryImageSB.toString();
+
+                        vectors = splitIntoVectors(stringBinaryImage, m);
+                        printMatrix(vectors);
+                        System.out.println("Suskaidyti vektoriai");
+
+                        Thread.sleep(1000);
+                        System.out.println("\nSuskaidytas vektorius bus užkoduotas po 3");
+                        Thread.sleep(1000);
+                        System.out.println("\nSuskaidytas vektorius bus užkoduotas po 2");
+                        Thread.sleep(1000);
+                        System.out.println("\nSuskaidytas vektorius bus užkoduotas po 1");
+                        Thread.sleep(1000);
+
+                        encodedVectors = new int[vectors.length][];
+
+                        for (int i = 0; i < vectors.length; i++) {
+                            encodedVectors[i] = encodeVector(vectors[i], generatorMatrix); // Užkoduojame vektorių
+                            System.out.println(Arrays.toString(encodedVectors[i])); // Spausdiname užkoduotą vektorių
+                        }
+                        System.out.println("Užkoduotas vektorius");
+
+                        System.out.print("\nĮveskite klaidos tikimybę (0 <= p_e <= 1): ");
+                        pe = scanner.nextDouble();
+                        if (pe < 0 || pe > 1) {
+                            System.out.println("Klaidos tikimybė turi būti tarp 0 ir 1.");
+                            scanner.close();
+                            return;
+                        }
+
+                        receivedVectors = new int[vectors.length][];
+
+                        // Iteruojame per užkoduotus vektorius ir perduodame juos per kanalą
+                        for (int i = 0; i < vectors.length; i++) {
+                            receivedVectors[i] = transmitVector(encodedVectors[i], pe); // Perduodame per kanalą
+                            System.out.println(Arrays.toString(receivedVectors[i])); // Spausdiname gautą vektorių
+                        }
+                        System.out.println("Iš kanalo išėjęs vektorius");
+
+                        decodedVectors = new int[vectors.length][];
+
+                        for (int i = 0; i < vectors.length; i++) {
+                            decodedVectors[i] = decodeVector(receivedVectors[i], m);  // Decode the received vector (vectors[i])
+                            System.out.println(Arrays.toString(decodedVectors[i]));  // Print the decoded vector
+                        }
+                        System.out.println("Dekoduoti vektoriai");
+
+
+
+                    } catch (IOException e) {
+                        // Jei nepavyksta nuskaityti paveikslėlio, parodykite klaidos pranešimą
+                        JOptionPane.showMessageDialog(frame, "Nepavyko įkelti paveikslėlio: " + e.getMessage(), "Klaida", JOptionPane.ERROR_MESSAGE);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    System.out.println("Vartotojas atsisakė pasirinkti failą.");
+                }
+
+        return;
         } //baigiasi switch
 
+    }
+
+    // Funkcija, kuri konvertuoja paveikslėlį į binarinį formatą (1 - balta, 0 - juoda)
+    public static int[][] convertToBinary(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int[][] binaryImage = new int[height][width];
+
+        // Slenkstis binarizacijai (šiuo atveju 128; galite koreguoti pagal poreikį)
+        int threshold = 128;
+
+        // Pereiname per visus pikselius ir atliekame binarizaciją
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Gaukite pikselio spalvą
+                int pixel = image.getRGB(x, y);
+                // Išskiriame raudoną, žalią ir mėlyną kanalus (RGB)
+                int red = (pixel >> 16) & 0xff;
+                int green = (pixel >> 8) & 0xff;
+                int blue = pixel & 0xff;
+
+                // Konvertuojame į pilką atspalvį (greitas pilkos spalvos suskaidymas)
+                int gray = (red + green + blue) / 3;
+
+                // Binarizacija pagal nustatytą slenkstį
+                if (gray > threshold) {
+                    binaryImage[y][x] = 1;  // Balta (1)
+                } else {
+                    binaryImage[y][x] = 0;  // Juoda (0)
+                }
+            }
+        }
+
+        return binaryImage;
+    }
+
+    // Funkcija, kuri išveda binarinį paveikslėlį į konsolę
+    public static void printBinaryImage(int[][] binaryImage) {
+        for (int y = 0; y < binaryImage.length; y++) {
+            for (int x = 0; x < binaryImage[y].length; x++) {
+                System.out.print(binaryImage[y][x] + " ");
+            }
+            System.out.println();  // Pereiname į kitą eilutę
+        }
     }
 
     private static String decodedVectorsToString(int[][] decodedVectors) {
