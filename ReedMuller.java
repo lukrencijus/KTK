@@ -27,8 +27,8 @@ public class ReedMuller {
                 // Vartotojas įveda kodo parametrą m Rydo-Miulerio kodui
                 System.out.print("\nRydo-Miulerio kodui (1, m)\nĮveskite kodo parametrą m: ");
                 int m = scanner.nextInt();
-                int columns = (int) Math.pow(2, m);
-                int rows = m + 1;
+                int columns = (int) Math.pow(2, m);         // Stulpeliai
+                int rows = m + 1;                           // Eilutės
 
                 // Yra sudaroma generuojanti matrica pagal vartotojo parametrą m
                 int[][] generatorMatrix = generateReedMullerMatrix(m);
@@ -39,7 +39,7 @@ public class ReedMuller {
                 System.out.print("Įveskite informacijos vektorių (" + rows + " ilgio)\n");
                 int[] inputVector = new int[rows];
 
-                // Vektoriaus įvedimas yra daromas kas vieną integerį, kad vartotojui būtų aiškiau
+                // Vektoriaus skaitymas yra daromas kas vieną integerį, kad vartotojui būtų aiškiau
                 // Bet vartotojas gali ir iš karto vesti pilną savo vektorių atskirdamas tarpais, programa automatiškai įrašys į tinkamas indekso vietas
                 for (int i = 0; i < rows; i++) {
                     int input;
@@ -146,7 +146,7 @@ public class ReedMuller {
                 // Paverčiame naudotojo įvestą tekstą į binary ASCII
                 String binaryText = textToBinary(inputText.toString());
 
-                // Suskaidome jau binarinį tekstą į vektorius ilgio 2^m
+                // Suskaidome jau binary tekstą į vektorius ilgio 2^m
                 int[][] vectors = splitIntoVectors(binaryText, m);
                 System.out.println("Suskaidyti vektoriai:");
                 printMatrix(vectors);
@@ -329,7 +329,7 @@ public class ReedMuller {
                     return;
                 }
         return;
-        } //baigiasi switch
+        } // Baigiasi switch
     }
 
 
@@ -380,7 +380,7 @@ public class ReedMuller {
 
     }
 
-    // Funkcija, kuri konvertuoja paveikslėlį į binarinį formatą (1 - balta, 0 - juoda)
+    // Funkcija, kuri konvertuoja paveikslėlį į binary formatą (1 - balta, 0 - juoda)
     public static int[][] convertToBinary(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
@@ -415,7 +415,7 @@ public class ReedMuller {
 
     // Funkcija, kuri dekoduotą binary tekstą paverčia atgal į normalų stringą
     private static String decodedVectorsToString(int[][] decodedVectors) {
-        // Sukuriame StringBuilder, kad galėtume lengvai sujungti binarines eilutes
+        // Sukuriame StringBuilder, kad galėtume lengvai sujungti binary eilutes
         StringBuilder binaryStringBuilder = new StringBuilder();
 
         // Iteruojame per kiekvieną dekoduotą vektorių
@@ -426,17 +426,17 @@ public class ReedMuller {
             }
         }
 
-        // Gauta binarinė eilutė
+        // Gauta binary eilutė
         String binaryString = binaryStringBuilder.toString();
         StringBuilder text = new StringBuilder();
 
-        // Padaliname binarinę eilutę į 8 bitų dalis ir paverčiame jas į simbolius
+        // Padaliname binary eilutę į 8 bitų dalis ir paverčiame jas į simbolius
         for (int i = 0; i < binaryString.length(); i += 8) {
             // Paimame 8 bitų dalį
             String byteString = binaryString.substring(i, Math.min(i + 8, binaryString.length()));
 
-            // Paverčiame binarinę eilutę į ASCII simbolį
-            int charCode = Integer.parseInt(byteString, 2);     // Paverčiame iš binarinės į sveikąjį skaičių
+            // Paverčiame binary eilutę į ASCII simbolį
+            int charCode = Integer.parseInt(byteString, 2);     // Paverčiame iš binary į sveikąjį skaičių
             text.append((char) charCode);                       // Paverčiame į simbolį ir pridedame prie galutinio teksto
         }
         return text.toString();  // Grąžiname atkurtą tekstą kaip eilutę
@@ -612,7 +612,7 @@ public class ReedMuller {
         // Kopijuojame pradinį vektorių
         double[] A = Arrays.copyOf(a, n);
 
-        // Atlikti FHT
+        // Atlikame FHT
         for (int step = 1; step < n; step <<= 1) {
             for (int i = 0; i < n; i += 2 * step) {
                 for (int j = 0; j < step; j++) {
