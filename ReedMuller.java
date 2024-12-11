@@ -213,9 +213,6 @@ public class ReedMuller {
                         frame.getContentPane().add(label, BorderLayout.CENTER);
                         frame.setVisible(true);  // Rodyti langą
 
-                        // Išvedame binarinę versiją į konsolę (jei reikia tikrinti)
-                        //printBinaryImage(binaryImage);
-
                         // Sukuriame StringBuilder ir užpildome jį binariniais duomenimis
                         StringBuilder binaryImageSB = new StringBuilder();
                         for (int[] row : binaryImage) {
@@ -230,7 +227,6 @@ public class ReedMuller {
                         printMatrix(vectors);
                         System.out.println("Suskaidyti vektoriai");
 
-                        Thread.sleep(1000);
                         System.out.println("\nSuskaidytas vektorius bus užkoduotas po 3");
                         Thread.sleep(1000);
                         System.out.println("\nSuskaidytas vektorius bus užkoduotas po 2");
@@ -271,7 +267,16 @@ public class ReedMuller {
                         }
                         System.out.println("Dekoduoti vektoriai");
 
+                        // Sukuriame BufferedImage
+                        image = createImageFromBinaryString(stringBinaryImage, 1920, 1280);
 
+                        // Atvaizduojame paveikslėlį
+                        displayImage(image);
+                        System.out.println("\nRodomas dekoduotas paveikslėlis");
+                        frame.toFront();          // Bring the window to the front
+                        frame.repaint();          // Ensure the window is redrawn
+                        frame.requestFocus();     // Request focus to ensure it's active
+                        frame.requestFocusInWindow();
 
                     } catch (IOException e) {
                         // Jei nepavyksta nuskaityti paveikslėlio, parodykite klaidos pranešimą
@@ -285,6 +290,53 @@ public class ReedMuller {
 
         return;
         } //baigiasi switch
+
+    }
+
+    // Funkcija kuri sukuria BufferedImage iš bitų sekos
+    public static BufferedImage createImageFromBinaryString(String binaryString, int width, int height) {
+        // Sukuriame BufferedImage su nurodytu plotu ir aukščiu
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        // Tikriname, ar bitų seka atitinka paveikslėlio dydį
+        if (binaryString.length() != width * height) {
+            throw new IllegalArgumentException("Bitų sekos ilgis turi atitikti paveikslėlio dydį!");
+        }
+
+        // Užpildome paveikslėlį su pikselių reikšmėmis pagal bitų seką
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                int index = i * width + j;
+                char bit = binaryString.charAt(index);
+
+                // Jeigu bitas 1 - balta, jeigu 0 - juoda
+                int color = (bit == '1') ? Color.WHITE.getRGB() : Color.BLACK.getRGB();
+                image.setRGB(j, i, color);
+            }
+        }
+
+        return image;
+    }
+
+    // Funkcija, kuri atvaizduoja BufferedImage
+    public static void displayImage(BufferedImage image) {
+        // Sukuriame JFrame ir pridedame JLabel su paveikslėliu
+        JFrame frame = new JFrame("Binary Image");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        ImageIcon icon = new ImageIcon(image);
+        JLabel label = new JLabel(icon);
+        frame.getContentPane().add(label, BorderLayout.CENTER);
+        frame.pack();
+        frame.setSize(800, 600);
+        frame.setVisible(true);
+        frame.setLocation(1000, 0);
+        frame.setVisible(true);      // Make the window visible
+        frame.setAlwaysOnTop(true);  // Keep the window on top
+
+        frame.toFront();             // Bring the window to the front
+        frame.repaint();             // Redraw the window
+        frame.requestFocusInWindow(); // Request focus to ensure it's active
+        frame.setAlwaysOnTop(false);  // Keep the window on top
 
     }
 
