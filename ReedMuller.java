@@ -143,6 +143,9 @@ public class ReedMuller {
                     inputText.append(line).append("\n");
                 }
 
+                inputText.deleteCharAt(0);
+                inputText.setLength(inputText.length() - 1);
+
                 // Paverčiame naudotojo įvestą tekstą į binary ASCII
                 String binaryText = textToBinary(inputText.toString());
 
@@ -168,9 +171,17 @@ public class ReedMuller {
                     return;
                 }
 
+                // Iteruojame per neužkoduotus vektorius ir perduodame juos į kanalą po vieną
+                int[][] receivedVectors2 = new int[vectors.length][];
+                System.out.println("Iš kanalo išėjęs neužkoduotas vektorius:");
+                for (int i = 0; i < vectors.length; i++) {
+                    receivedVectors2[i] = transmitVector(vectors[i], pe);        // Perduodame per kanalą
+                    System.out.println(Arrays.toString(receivedVectors2[i]));    // Spausdiname gautą vektorių
+                }
+
                 // Iteruojame per užkoduotus vektorius ir perduodame juos į kanalą po vieną
                 int[][] receivedVectors = new int[vectors.length][];
-                System.out.println("Iš kanalo išėjęs vektorius:");
+                System.out.println("Iš kanalo išėjęs užkoduotas vektorius:");
                 for (int i = 0; i < vectors.length; i++) {
                     receivedVectors[i] = transmitVector(encodedVectors[i], pe); // Perduodame per kanalą
                     System.out.println(Arrays.toString(receivedVectors[i]));    // Spausdiname gautą vektorių
@@ -178,16 +189,18 @@ public class ReedMuller {
 
                 // Iteruojame per iš kanalo išėjusius vektorius ir dekoduojame juos po vieną
                 int[][] decodedVectors = new int[vectors.length][];
-                System.out.println("Dekoduoti vektoriai:");
+                System.out.println("Dekoduotas vektorius:");
                 for (int i = 0; i < vectors.length; i++) {
                     decodedVectors[i] = decodeVector(receivedVectors[i], m);    // Dekoduojame vektorių
                     System.out.println(Arrays.toString(decodedVectors[i]));     // Spausdiname dekotuotą vektorių
                 }
 
-                // Išspausdiname į ekraną palyginimui pradinį tekstą ir atkurtą tekstą
-                System.out.println("\nPradinis tekstas: " + inputText);
+                // Išspausdiname į ekraną palyginimui pradinį tekstą, siustą neužkoduotą tekstą ir atkurtą tekstą
+                System.out.println("\nPradinis tekstas:\n" + inputText);
+                String decodedText2 = decodedVectorsToString(receivedVectors2); // Turime paversti dekoduotus vektorius į vieną stringą
+                System.out.println("\nAtkurtas tekstas (siųstas neužkoduotas pro kanalą):\n" + decodedText2);
                 String decodedText = decodedVectorsToString(decodedVectors);    // Turime paversti dekoduotus vektorius į vieną stringą
-                System.out.println("Atkurtas tekstas: " + decodedText);
+                System.out.println("\nAtkurtas tekstas:\n" + decodedText);
 
                 scanner.close();
                 return;
@@ -287,7 +300,7 @@ public class ReedMuller {
                             decodedVectors[i] = decodeVector(receivedVectors[i], m);        // Dekoduojame vektorių
                             System.out.println(Arrays.toString(decodedVectors[i]));         // Spausdiname dekotuotą vektorių
                         }
-                        System.out.println("Dekoduoti vektoriai");
+                        System.out.println("Dekoduotas vektorius");
 
                         // Sukuriame SB iš dekoduotų vektorių
                         StringBuilder stringBuilder = new StringBuilder();
@@ -415,31 +428,28 @@ public class ReedMuller {
 
     // Funkcija, kuri dekoduotą binary tekstą paverčia atgal į normalų stringą
     private static String decodedVectorsToString(int[][] decodedVectors) {
-        // Sukuriame StringBuilder, kad galėtume lengvai sujungti binary eilutes
         StringBuilder binaryStringBuilder = new StringBuilder();
 
         // Iteruojame per kiekvieną dekoduotą vektorių
         for (int i = 0; i < decodedVectors.length; i++) {
-            // Kiekvienas vektorius yra bitų masyvas
             for (int j = 0; j < decodedVectors[i].length; j++) {
-                binaryStringBuilder.append(decodedVectors[i][j]);  // Pridedame kiekvieną bitą į bendrą eilutę
+                binaryStringBuilder.append(decodedVectors[i][j]);  // Sukaupiame visus bitus
             }
         }
 
-        // Gauta binary eilutė
+        // Konvertuojame bitų eilutę į simbolius (8 bitų grupėmis)
+        StringBuilder result = new StringBuilder();
         String binaryString = binaryStringBuilder.toString();
-        StringBuilder text = new StringBuilder();
 
-        // Padaliname binary eilutę į 8 bitų dalis ir paverčiame jas į simbolius
         for (int i = 0; i < binaryString.length(); i += 8) {
-            // Paimame 8 bitų dalį
-            String byteString = binaryString.substring(i, Math.min(i + 8, binaryString.length()));
-
-            // Paverčiame binary eilutę į ASCII simbolį
-            int charCode = Integer.parseInt(byteString, 2);     // Paverčiame iš binary į sveikąjį skaičių
-            text.append((char) charCode);                       // Paverčiame į simbolį ir pridedame prie galutinio teksto
+            // Patikriname, ar liko pakankamai bitų (8 bitai)
+            if (i + 8 <= binaryString.length()) {
+                String byteString = binaryString.substring(i, i + 8);  // Paimame 8 bitų grupę
+                int charCode = Integer.parseInt(byteString, 2);  // Konvertuojame į skaičių
+                result.append((char) charCode);  // Pridedame simbolį į rezultatą
+            }
         }
-        return text.toString();  // Grąžiname atkurtą tekstą kaip eilutę
+        return result.toString();
     }
 
     // Funkcija, kuri paverčia simbolį į 8-bitų binary formą (ASCII kodas)
