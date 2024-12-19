@@ -73,6 +73,7 @@ public class ReedMuller {
                 int[] encodedVector = encodeVector(inputVector, generatorMatrix);
                 System.out.println("Užkoduotas vektorius:");
                 System.out.println(Arrays.toString(encodedVector));
+                // pasidarome kopiją, kad palyginti su iš kanalo išėjusiu vektoriumi
                 int[] testVector = Arrays.copyOf(encodedVector, encodedVector.length);
 
                 // Siunčiame vektorių per nepatikimą kanalą
@@ -254,6 +255,7 @@ public class ReedMuller {
                         printMatrix(vectors);
                         System.out.println("Suskaidyti vektoriai");
 
+                        // Išsisaugome, nes norėsime neužkoduotą vektorių siųsti pro kanalą ir parodyti
                         int[][] saved = Arrays.copyOf(vectors, vectors.length);
 
                         // Pranešame vartotojui, kad tuoj bus užkoduotas vektorius,
@@ -271,7 +273,6 @@ public class ReedMuller {
                             System.out.println(Arrays.toString(vectors[i]));         // Spausdiname užkoduotą vektorių
                         }
                         System.out.println("Užkoduotas vektorius");
-                        encodedVectors = Arrays.copyOf(vectors, vectors.length);
 
                         // Paprašome vartotojo įvesti klaidos tikimybę
                         System.out.print("\nĮveskite klaidos tikimybę (0 <= p_e <= 1): ");
@@ -282,46 +283,44 @@ public class ReedMuller {
                             return;
                         }
 
-                        int[][] notencodedVectors = Arrays.copyOf(saved, saved.length);
                         // Iteruojame per neužkoduotus vektorius ir perduodame juos po vieną per kanalą
-                        for (int i = 0; i < vectors.length; i++) {
-                            transmitVector(notencodedVectors[i], pe);     // Perduodame per kanalą
-                            System.out.println(Arrays.toString(notencodedVectors[i]));        // Spausdiname gautą vektorių
+                        for (int i = 0; i < saved.length; i++) {
+                            transmitVector(saved[i], pe);                         // Perduodame per kanalą
+                            System.out.println(Arrays.toString(saved[i]));        // Spausdiname gautą vektorių
                         }
                         System.out.println("Iš kanalo išėjęs vektorius (prieš tai jis buvo neužkoduotas)");
-
+                        Thread.sleep(3000);
 
                         // Iteruojame per užkoduotus vektorius ir perduodame juos po vieną per kanalą
                         for (int i = 0; i < vectors.length; i++) {
-                            transmitVector(encodedVectors[i], pe);     // Perduodame per kanalą
-                            System.out.println(Arrays.toString(encodedVectors[i]));        // Spausdiname gautą vektorių
+                            transmitVector(vectors[i], pe);                        // Perduodame per kanalą
+                            System.out.println(Arrays.toString(vectors[i]));       // Spausdiname gautą vektorių
                         }
                         System.out.println("Iš kanalo išėjęs vektorius (pieš tai jis buvo užkoduotas)");
-                        receivedVectors = Arrays.copyOf(encodedVectors, encodedVectors.length);
+                        Thread.sleep(3000);
 
                         // Iteruojame per iš kanalo išėjusius vektorius ir dekoduojame juos po vieną
                         for (int i = 0; i < vectors.length; i++) {
-                            receivedVectors[i] = decodeVector(receivedVectors[i], m);        // Dekoduojame vektorių
-                            System.out.println(Arrays.toString(receivedVectors[i]));         // Spausdiname dekotuotą vektorių
+                            vectors[i] = decodeVector(vectors[i], m);               // Dekoduojame vektorių
+                            System.out.println(Arrays.toString(vectors[i]));        // Spausdiname dekoduotą vektorių
                         }
                         System.out.println("Dekoduotas vektorius");
-                        decodedVectors = Arrays.copyOf(receivedVectors, receivedVectors.length);
 
                         // Sukuriame SB iš dekoduotų vektorių
                         StringBuilder stringBuilder = new StringBuilder();
-                        for (int i = 0; i < decodedVectors.length; i++) {
-                            for (int j = 0; j < decodedVectors[i].length; j++) {
+                        for (int i = 0; i < vectors.length; i++) {
+                            for (int j = 0; j < vectors[i].length; j++) {
                                 // Konvertuojame kiekvieną skaičių į SB
-                                stringBuilder.append(Integer.toBinaryString(decodedVectors[i][j]));
+                                stringBuilder.append(Integer.toBinaryString(vectors[i][j]));
                             }
                         }
 
                         // Sukuriame SB iš nedekoduotų vektorių
                         StringBuilder stringBuilder2 = new StringBuilder();
-                        for (int i = 0; i < notencodedVectors.length; i++) {
-                            for (int j = 0; j < notencodedVectors[i].length; j++) {
+                        for (int i = 0; i < saved.length; i++) {
+                            for (int j = 0; j < saved[i].length; j++) {
                                 // Konvertuojame kiekvieną skaičių į SB
-                                stringBuilder2.append(Integer.toBinaryString(notencodedVectors[i][j]));
+                                stringBuilder2.append(Integer.toBinaryString(saved[i][j]));
                             }
                         }
 
