@@ -254,6 +254,8 @@ public class ReedMuller {
                         printMatrix(vectors);
                         System.out.println("Suskaidyti vektoriai");
 
+                        int[][] saved = Arrays.copyOf(vectors, vectors.length);
+
                         // Pranešame vartotojui, kad tuoj bus užkoduotas vektorius,
                         // kad viskas nevyktų per greitai ir vartotojas spėtų pamatyti suskaidytą vektorių
                         System.out.println("\nSuskaidytas vektorius bus užkoduotas po 3");
@@ -280,12 +282,21 @@ public class ReedMuller {
                             return;
                         }
 
+                        int[][] notencodedVectors = Arrays.copyOf(saved, saved.length);
+                        // Iteruojame per neužkoduotus vektorius ir perduodame juos po vieną per kanalą
+                        for (int i = 0; i < vectors.length; i++) {
+                            transmitVector(notencodedVectors[i], pe);     // Perduodame per kanalą
+                            System.out.println(Arrays.toString(notencodedVectors[i]));        // Spausdiname gautą vektorių
+                        }
+                        System.out.println("Iš kanalo išėjęs vektorius (prieš tai jis buvo neužkoduotas)");
+
+
                         // Iteruojame per užkoduotus vektorius ir perduodame juos po vieną per kanalą
                         for (int i = 0; i < vectors.length; i++) {
                             transmitVector(encodedVectors[i], pe);     // Perduodame per kanalą
                             System.out.println(Arrays.toString(encodedVectors[i]));        // Spausdiname gautą vektorių
                         }
-                        System.out.println("Iš kanalo išėjęs vektorius");
+                        System.out.println("Iš kanalo išėjęs vektorius (pieš tai jis buvo užkoduotas)");
                         receivedVectors = Arrays.copyOf(encodedVectors, encodedVectors.length);
 
                         // Iteruojame per iš kanalo išėjusius vektorius ir dekoduojame juos po vieną
@@ -305,14 +316,34 @@ public class ReedMuller {
                             }
                         }
 
+                        // Sukuriame SB iš nedekoduotų vektorių
+                        StringBuilder stringBuilder2 = new StringBuilder();
+                        for (int i = 0; i < notencodedVectors.length; i++) {
+                            for (int j = 0; j < notencodedVectors[i].length; j++) {
+                                // Konvertuojame kiekvieną skaičių į SB
+                                stringBuilder2.append(Integer.toBinaryString(notencodedVectors[i][j]));
+                            }
+                        }
+
                         // Gauname paveikslėlio ilgį ir aukštį
                         int width = image.getWidth();
                         int height = image.getHeight();
 
+                        // Sukuriame atvaizduoti neužkoduotą paveikslėlį
+                        BufferedImage notdecodedImage = createImageFromBinaryRGB(stringBuilder2.toString(), width, height);
+                        displayImage2(notdecodedImage);
+                        System.out.println("\nRodomas dekoduotas paveikslėlis (kuris buvo neužkoduotas prieš tai)");
+                        frame.setAlwaysOnTop(true);
+                        frame.toFront();
+                        frame.repaint();
+                        frame.requestFocus();
+                        frame.requestFocusInWindow();
+                        frame.setAlwaysOnTop(false);
+
                         // Sukuriame dekoduotą paveikslėlį
                         BufferedImage decodedImage = createImageFromBinaryRGB(stringBuilder.toString(), width, height);
                         displayImage(decodedImage);
-                        System.out.println("\nRodomas dekoduotas paveikslėlis");
+                        System.out.println("\nRodomas dekoduotas paveikslėlis (kuris buvo užkoduotas prieš tai)");
                         frame.setAlwaysOnTop(true);
                         frame.toFront();
                         frame.repaint();
@@ -360,7 +391,7 @@ public class ReedMuller {
     // Funkcija, kuri atvaizduoja dekoduotą paveikslėlį
     public static void displayImage(BufferedImage image) {
         // Sukuriame JFrame ir pridedame JLabel su paveikslėliu
-        JFrame frame = new JFrame("Atkurtas paveikslėlis");
+        JFrame frame = new JFrame("Atkurtas dekoduotas paveikslėlis");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         ImageIcon icon = new ImageIcon(image);
         JLabel label = new JLabel(icon);
@@ -369,6 +400,26 @@ public class ReedMuller {
         frame.setSize(800, 600);
         frame.setVisible(true);
         frame.setLocation(1000, 0);
+        frame.setVisible(true);
+        frame.setAlwaysOnTop(true);
+        frame.toFront();
+        frame.repaint();
+        frame.requestFocusInWindow();
+        frame.setAlwaysOnTop(false);
+    }
+
+    // Funkcija, kuri atvaizduoja nedekoduotą paveikslėlį
+    public static void displayImage2(BufferedImage image) {
+        // Sukuriame JFrame ir pridedame JLabel su paveikslėliu
+        JFrame frame = new JFrame("Atkurtas nedekoduotas paveikslėlis");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        ImageIcon icon = new ImageIcon(image);
+        JLabel label = new JLabel(icon);
+        frame.getContentPane().add(label, BorderLayout.CENTER);
+        frame.pack();
+        frame.setSize(800, 600);
+        frame.setVisible(true);
+        frame.setLocation(500, 300);
         frame.setVisible(true);
         frame.setAlwaysOnTop(true);
         frame.toFront();
