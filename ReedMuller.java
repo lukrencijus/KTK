@@ -218,7 +218,7 @@ public class ReedMuller {
                 printMatrix(generatorMatrix);
 
                 System.out.println("\nPrašome pasirinkti BMP paveiksliuką");
-                JFrame frame = new JFrame("Paveikslėlio peržiūra");
+                JFrame frame = new JFrame("Originalus paveikslėlis");
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setSize(800, 600);
 
@@ -374,7 +374,7 @@ public class ReedMuller {
     // Funkcija, kuri atvaizduoja dekoduotą paveikslėlį
     public static void displayImage(BufferedImage image) {
         // Sukuriame JFrame ir pridedame JLabel su paveikslėliu
-        JFrame frame = new JFrame("Binary Image");
+        JFrame frame = new JFrame("Atkurtas paveikslėlis");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         ImageIcon icon = new ImageIcon(image);
         JLabel label = new JLabel(icon);
