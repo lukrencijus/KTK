@@ -237,7 +237,7 @@ public class ReedMuller {
                         BufferedImage image = ImageIO.read(selectedFile);
 
                         // Konvertuojame paveikslėlį į binary formatą
-                        int[][][] binaryImage = convertToBinaryWithRGB(image);
+                        String binaryImage = convertToBinaryWithRGB(image);
 
                         // Parodome originalų paveikslėlį
                         ImageIcon imageIcon = new ImageIcon(image);
@@ -245,20 +245,20 @@ public class ReedMuller {
                         frame.getContentPane().add(label, BorderLayout.CENTER);
                         frame.setVisible(true);
 
-                        // Sukuriame StringBuilder ir užpildome jį binary duomenimis
-                        StringBuilder binaryImageSB = new StringBuilder();
-                        for (int y = 0; y < binaryImage.length; y++) {
-                            for (int x = 0; x < binaryImage[y].length; x++) {
-                                for (int c = 0; c < 3; c++) { // 3 spalvų kanalai: R, G, B
-                                    binaryImageSB.append(binaryImage[y][x][c]);
-                                }
-                            }
-                        }
+//                        // Sukuriame StringBuilder ir užpildome jį binary duomenimis
+//                        StringBuilder binaryImageSB = new StringBuilder();
+//                        for (int y = 0; y < binaryImage.length; y++) {
+//                            for (int x = 0; x < binaryImage[y].length; x++) {
+//                                for (int c = 0; c < 3; c++) { // 3 spalvų kanalai: R, G, B
+//                                    binaryImageSB.append(binaryImage[y][x][c]);
+//                                }
+//                            }
+//                        }
 
-                        // Iš SB į vientisą stringą
-                        String stringBinaryImage = binaryImageSB.toString();
+//                        // Iš SB į vientisą stringą
+//                        String stringBinaryImage = binaryImageSB.toString();
                         // Suskaidome vektorius į vektorius ilgio 2^m
-                        vectors = splitIntoVectors(stringBinaryImage, m);
+                        vectors = splitIntoVectors(binaryImage, m);
                         printMatrix(vectors);
                         System.out.println("Suskaidyti vektoriai");
 
@@ -313,19 +313,15 @@ public class ReedMuller {
                             }
                         }
 
-                        // Iš SB į stringą
-                        stringBinaryImage = stringBuilder.toString();
+//                        // Iš SB į stringą
+//                        stringBinaryImage = stringBuilder.toString();
 
                         // Gauname paveikslėlio ilgį ir aukštį
                         int width = image.getWidth();
                         int height = image.getHeight();
 
-                        // Sukuriame paveikslėlį iš jau binary stringo
-                        int[][][] decodedBinaryImage = convertBinaryStringToRGB(stringBinaryImage, width, height);
-
-                        // Atvaizduojame paveikslėlį
-                        // Atvaizduojame dekoduotą paveikslėlį
-                        BufferedImage decodedImage = createImageFromBinaryRGB(decodedBinaryImage, width, height);
+                        // Sukuriame dekoduotą paveikslėlį
+                        BufferedImage decodedImage = createImageFromBinaryRGB(stringBuilder.toString(), width, height);
                         displayImage(decodedImage);
                         System.out.println("\nRodomas dekoduotas paveikslėlis");
                         frame.setAlwaysOnTop(true);
@@ -365,18 +361,22 @@ public class ReedMuller {
         return binaryImageRGB;
     }
 
-    // Funkcija, kuri konvertuoja dvejetainį formatą atgal į spalvotą paveikslėlį
-    public static BufferedImage createImageFromBinaryRGB(int[][][] binaryImage, int width, int height) {
+    // Funkcija, kuri konvertuoja dvejetainį string'ą atgal į RGB formą
+    public static BufferedImage createImageFromBinaryRGB(String binaryImage, int width, int height) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        int index = 0;
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                // Atstatome RGB reikšmes pagal dvejetainius duomenis
-                int r = binaryImage[y][x][0] * 255; // Jei 1, tada 255, kitaip 0
-                int g = binaryImage[y][x][1] * 255;
-                int b = binaryImage[y][x][2] * 255;
+                // Išimame 8-bitų dvejetainį kodą kiekvienam RGB kanalui
+                int r = Integer.parseInt(binaryImage.substring(index, index + 8), 2);
+                index += 8;
+                int g = Integer.parseInt(binaryImage.substring(index, index + 8), 2);
+                index += 8;
+                int b = Integer.parseInt(binaryImage.substring(index, index + 8), 2);
+                index += 8;
 
-                // Sudarome spalvą
+                // Sukuriame spalvą ir nustatome RGB reikšmes
                 Color color = new Color(r, g, b);
                 image.setRGB(x, y, color.getRGB());
             }
@@ -407,27 +407,27 @@ public class ReedMuller {
 
     }
 
-    // Funkcija, kuri konvertuoja RGB paveikslėlį į dvejetainį formatą
-    public static int[][][] convertToBinaryWithRGB(BufferedImage image) {
+    // Funkcija, kuri konvertuoja RGB reikšmes į 8-bitų dvejetainį formatą
+    public static String convertToBinaryWithRGB(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
-        int[][][] binaryImage = new int[height][width][3]; // 3 kanalai: R, G, B
+        StringBuilder binaryImageSB = new StringBuilder();
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                // Gauname RGB reikšmes iš paveikslėlio
                 Color color = new Color(image.getRGB(x, y));
                 int r = color.getRed();
                 int g = color.getGreen();
                 int b = color.getBlue();
 
-                // Naudojame slenkstį (pvz., 128) ir konvertuojame į dvejetainį formatą
-                binaryImage[y][x][0] = (r > 128) ? 1 : 0; // Raudonas
-                binaryImage[y][x][1] = (g > 128) ? 1 : 0; // Žalias
-                binaryImage[y][x][2] = (b > 128) ? 1 : 0; // Mėlynas
+                // Konvertuojame kiekvieną komponentą į 8-bitų dvejetainį formatą
+                binaryImageSB.append(String.format("%8s", Integer.toBinaryString(r)).replace(' ', '0')); // Raudonas kanalas
+                binaryImageSB.append(String.format("%8s", Integer.toBinaryString(g)).replace(' ', '0')); // Žalias kanalas
+                binaryImageSB.append(String.format("%8s", Integer.toBinaryString(b)).replace(' ', '0')); // Mėlynas kanalas
             }
         }
-        return binaryImage;
+
+        return binaryImageSB.toString();
     }
 
     // Funkcija, kuri dekoduotą binary tekstą paverčia atgal į normalų stringą
