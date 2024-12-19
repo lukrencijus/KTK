@@ -146,10 +146,11 @@ public class ReedMuller {
                     inputText.append(line).append("\n");
                 }
 
+                // Ištriname pradžioje ir pabaigoje \n
                 inputText.deleteCharAt(0);
                 inputText.setLength(inputText.length() - 1);
 
-                // Paverčiame naudotojo įvestą tekstą į binary ASCII
+                // Paverčiame vartotojas įvestą tekstą į binary ASCII
                 String binaryText = textToBinary(inputText.toString());
 
                 // Suskaidome jau binary tekstą į vektorius ilgio 2^m
@@ -177,19 +178,21 @@ public class ReedMuller {
                 // Iteruojame per neužkoduotus vektorius ir perduodame juos į kanalą po vieną
                 System.out.println("Iš kanalo išėjęs neužkoduotas vektorius:");
                 for (int i = 0; i < vectors.length; i++) {
-                    transmitVector(vectors[i], pe);        // Perduodame per kanalą
-                    System.out.println(Arrays.toString(vectors[i]));    // Spausdiname gautą vektorių
+                    transmitVector(vectors[i], pe);                            // Perduodame per kanalą
+                    System.out.println(Arrays.toString(vectors[i]));           // Spausdiname gautą vektorių
                 }
 
+                // Išsisaugome, kad išspausdinti į ekraną vėliau neužkoduotą vektorių
                 int[][] receivedVectors2 = Arrays.copyOf(vectors, vectors.length);
 
                 // Iteruojame per užkoduotus vektorius ir perduodame juos į kanalą po vieną
                 System.out.println("Iš kanalo išėjęs užkoduotas vektorius:");
                 for (int i = 0; i < vectors.length; i++) {
-                    transmitVector(encodedVectors[i], pe); // Perduodame per kanalą
+                    transmitVector(encodedVectors[i], pe);                     // Perduodame per kanalą
                     System.out.println(Arrays.toString(encodedVectors[i]));    // Spausdiname gautą vektorių
                 }
 
+                // Naudosime dekodavimui
                 int[][] receivedVectors = Arrays.copyOf(encodedVectors, encodedVectors.length);
 
                 // Iteruojame per iš kanalo išėjusius vektorius ir dekoduojame juos po vieną
@@ -205,7 +208,7 @@ public class ReedMuller {
                 String decodedText2 = decodedVectorsToString(receivedVectors2); // Turime paversti dekoduotus vektorius į vieną stringą
                 System.out.println("\nAtkurtas tekstas (siųstas neužkoduotas pro kanalą):\n" + decodedText2);
                 String decodedText = decodedVectorsToString(decodedVectors);    // Turime paversti dekoduotus vektorius į vieną stringą
-                System.out.println("\nAtkurtas tekstas: (siųstas užkoduotas pro kanalą)\n" + decodedText);
+                System.out.println("\nAtkurtas tekstas (siųstas užkoduotas pro kanalą):\n" + decodedText);
 
                 scanner.close();
                 return;
@@ -527,7 +530,7 @@ public class ReedMuller {
         return vectors;
     }
 
-    // Funkcija, kuri lygina užkoduotą vektorių su iš kanalo gautu vektoriu
+    // Funkcija, kuri lygina užkoduotą vektorių su iš kanalo gautu vektoriumi
     private static void detectErrors(int[] encodedVector, int[] receivedVector) {
         int errorCount = 0;
         StringBuilder errorPositions = new StringBuilder();
@@ -569,7 +572,7 @@ public class ReedMuller {
         return generatorMatrix;
     }
 
-    // Funkcija, kuri užkoduotą vektorių naudodama Rydo-Miulerio(1, m) generuojančią matricą
+    // Funkcija, kuri užkoduoja vektorių naudodama Rydo-Miulerio(1, m) generuojančią matricą
     private static int[] encodeVector(int[] vector, int[][] generatorMatrix) {
         int columns = generatorMatrix[0].length;
         int[] encoded = new int[columns];
