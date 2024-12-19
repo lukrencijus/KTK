@@ -73,14 +73,16 @@ public class ReedMuller {
                 int[] encodedVector = encodeVector(inputVector, generatorMatrix);
                 System.out.println("Užkoduotas vektorius:");
                 System.out.println(Arrays.toString(encodedVector));
+                int[] testVector = Arrays.copyOf(encodedVector, encodedVector.length);
 
                 // Siunčiame vektorių per nepatikimą kanalą
-                int[] receivedVector = transmitVector(encodedVector, pe);
+                transmitVector(encodedVector, pe);
+                int[] receivedVector = Arrays.copyOf(encodedVector, encodedVector.length);
                 System.out.println("Iš kanalo išėjęs vektorius:");
                 System.out.println(Arrays.toString(receivedVector));
 
                 // Surandame klaidų kiekį ir klaidų vietas lygindami užkoduotą vektorių ir iš kanalo išėjusį vektorių
-                detectErrors(encodedVector, receivedVector);
+                detectErrors(testVector, receivedVector);
 
                 // Leidžiame vartotojui pasirinkti, ar jis nori redaguoti iš kanalo išėjusį vektorių
                 System.out.print("Ar norite redaguoti iš kanalo išėjusį vektorių? (taip/ne): ");
@@ -111,7 +113,7 @@ public class ReedMuller {
                     System.out.println("Naujas vektorius po redagavimo:");
                     System.out.println(Arrays.toString(receivedVector));
                     // Dar kartą patikriname klaidų kiekį ir klaidų vietas
-                    detectErrors(encodedVector, receivedVector);
+                    detectErrors(testVector, receivedVector);
                 }
 
                 // Dekoduojame vektorių
@@ -172,20 +174,22 @@ public class ReedMuller {
                 }
 
                 // Iteruojame per neužkoduotus vektorius ir perduodame juos į kanalą po vieną
-                int[][] receivedVectors2 = new int[vectors.length][];
                 System.out.println("Iš kanalo išėjęs neužkoduotas vektorius:");
                 for (int i = 0; i < vectors.length; i++) {
-                    receivedVectors2[i] = transmitVector(vectors[i], pe);        // Perduodame per kanalą
-                    System.out.println(Arrays.toString(receivedVectors2[i]));    // Spausdiname gautą vektorių
+                    transmitVector(vectors[i], pe);        // Perduodame per kanalą
+                    System.out.println(Arrays.toString(vectors[i]));    // Spausdiname gautą vektorių
                 }
 
+                int[][] receivedVectors2 = Arrays.copyOf(vectors, vectors.length);
+
                 // Iteruojame per užkoduotus vektorius ir perduodame juos į kanalą po vieną
-                int[][] receivedVectors = new int[vectors.length][];
                 System.out.println("Iš kanalo išėjęs užkoduotas vektorius:");
                 for (int i = 0; i < vectors.length; i++) {
-                    receivedVectors[i] = transmitVector(encodedVectors[i], pe); // Perduodame per kanalą
-                    System.out.println(Arrays.toString(receivedVectors[i]));    // Spausdiname gautą vektorių
+                    transmitVector(encodedVectors[i], pe); // Perduodame per kanalą
+                    System.out.println(Arrays.toString(encodedVectors[i]));    // Spausdiname gautą vektorių
                 }
+
+                int[][] receivedVectors = Arrays.copyOf(encodedVectors, encodedVectors.length);
 
                 // Iteruojame per iš kanalo išėjusius vektorius ir dekoduojame juos po vieną
                 int[][] decodedVectors = new int[vectors.length][];
@@ -200,7 +204,7 @@ public class ReedMuller {
                 String decodedText2 = decodedVectorsToString(receivedVectors2); // Turime paversti dekoduotus vektorius į vieną stringą
                 System.out.println("\nAtkurtas tekstas (siųstas neužkoduotas pro kanalą):\n" + decodedText2);
                 String decodedText = decodedVectorsToString(decodedVectors);    // Turime paversti dekoduotus vektorius į vieną stringą
-                System.out.println("\nAtkurtas tekstas:\n" + decodedText);
+                System.out.println("\nAtkurtas tekstas: (siųstas užkoduotas pro kanalą)\n" + decodedText);
 
                 scanner.close();
                 return;
@@ -245,18 +249,6 @@ public class ReedMuller {
                         frame.getContentPane().add(label, BorderLayout.CENTER);
                         frame.setVisible(true);
 
-//                        // Sukuriame StringBuilder ir užpildome jį binary duomenimis
-//                        StringBuilder binaryImageSB = new StringBuilder();
-//                        for (int y = 0; y < binaryImage.length; y++) {
-//                            for (int x = 0; x < binaryImage[y].length; x++) {
-//                                for (int c = 0; c < 3; c++) { // 3 spalvų kanalai: R, G, B
-//                                    binaryImageSB.append(binaryImage[y][x][c]);
-//                                }
-//                            }
-//                        }
-
-//                        // Iš SB į vientisą stringą
-//                        String stringBinaryImage = binaryImageSB.toString();
                         // Suskaidome vektorius į vektorius ilgio 2^m
                         vectors = splitIntoVectors(binaryImage, m);
                         printMatrix(vectors);
@@ -272,12 +264,12 @@ public class ReedMuller {
                         Thread.sleep(1000);
 
                         // Iteruojame per suskaidytus vektorius ir užkoduojame juos po vieną
-                        encodedVectors = new int[vectors.length][];
                         for (int i = 0; i < vectors.length; i++) {
-                            encodedVectors[i] = encodeVector(vectors[i], generatorMatrix);  // Užkoduojame vektorių
-                            System.out.println(Arrays.toString(encodedVectors[i]));         // Spausdiname užkoduotą vektorių
+                            vectors[i] = encodeVector(vectors[i], generatorMatrix);  // Užkoduojame vektorių
+                            System.out.println(Arrays.toString(vectors[i]));         // Spausdiname užkoduotą vektorių
                         }
                         System.out.println("Užkoduotas vektorius");
+                        encodedVectors = Arrays.copyOf(vectors, vectors.length);
 
                         // Paprašome vartotojo įvesti klaidos tikimybę
                         System.out.print("\nĮveskite klaidos tikimybę (0 <= p_e <= 1): ");
@@ -289,20 +281,20 @@ public class ReedMuller {
                         }
 
                         // Iteruojame per užkoduotus vektorius ir perduodame juos po vieną per kanalą
-                        receivedVectors = new int[vectors.length][];
                         for (int i = 0; i < vectors.length; i++) {
-                            receivedVectors[i] = transmitVector(encodedVectors[i], pe);     // Perduodame per kanalą
-                            System.out.println(Arrays.toString(receivedVectors[i]));        // Spausdiname gautą vektorių
+                            transmitVector(encodedVectors[i], pe);     // Perduodame per kanalą
+                            System.out.println(Arrays.toString(encodedVectors[i]));        // Spausdiname gautą vektorių
                         }
                         System.out.println("Iš kanalo išėjęs vektorius");
+                        receivedVectors = Arrays.copyOf(encodedVectors, encodedVectors.length);
 
                         // Iteruojame per iš kanalo išėjusius vektorius ir dekoduojame juos po vieną
-                        decodedVectors = new int[vectors.length][];
                         for (int i = 0; i < vectors.length; i++) {
-                            decodedVectors[i] = decodeVector(receivedVectors[i], m);        // Dekoduojame vektorių
-                            System.out.println(Arrays.toString(decodedVectors[i]));         // Spausdiname dekotuotą vektorių
+                            receivedVectors[i] = decodeVector(receivedVectors[i], m);        // Dekoduojame vektorių
+                            System.out.println(Arrays.toString(receivedVectors[i]));         // Spausdiname dekotuotą vektorių
                         }
                         System.out.println("Dekoduotas vektorius");
+                        decodedVectors = Arrays.copyOf(receivedVectors, receivedVectors.length);
 
                         // Sukuriame SB iš dekoduotų vektorių
                         StringBuilder stringBuilder = new StringBuilder();
@@ -312,9 +304,6 @@ public class ReedMuller {
                                 stringBuilder.append(Integer.toBinaryString(decodedVectors[i][j]));
                             }
                         }
-
-//                        // Iš SB į stringą
-//                        stringBinaryImage = stringBuilder.toString();
 
                         // Gauname paveikslėlio ilgį ir aukštį
                         int width = image.getWidth();
@@ -345,30 +334,14 @@ public class ReedMuller {
         } // Baigiasi switch
     }
 
-    // Funkcija, kuri konvertuoja dvejetainę eilutę atgal į RGB formą
-    public static int[][][] convertBinaryStringToRGB(String binaryImage, int width, int height) {
-        int[][][] binaryImageRGB = new int[height][width][3];
-        int index = 0;
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                for (int c = 0; c < 3; c++) { // RGB kanalai
-                    binaryImageRGB[y][x][c] = Integer.parseInt(binaryImage.substring(index, index + 1));
-                    index++;
-                }
-            }
-        }
-        return binaryImageRGB;
-    }
-
-    // Funkcija, kuri konvertuoja dvejetainį string'ą atgal į RGB formą
+    // Funkcija, kuri konvertuoja binary string atgal į RGB formą
     public static BufferedImage createImageFromBinaryRGB(String binaryImage, int width, int height) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         int index = 0;
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                // Išimame 8-bitų dvejetainį kodą kiekvienam RGB kanalui
+                // Išimame 8-bitų binary kodą kiekvienam RGB kanalui
                 int r = Integer.parseInt(binaryImage.substring(index, index + 8), 2);
                 index += 8;
                 int g = Integer.parseInt(binaryImage.substring(index, index + 8), 2);
@@ -381,7 +354,6 @@ public class ReedMuller {
                 image.setRGB(x, y, color.getRGB());
             }
         }
-
         return image;
     }
 
@@ -399,15 +371,13 @@ public class ReedMuller {
         frame.setLocation(1000, 0);
         frame.setVisible(true);
         frame.setAlwaysOnTop(true);
-
         frame.toFront();
         frame.repaint();
         frame.requestFocusInWindow();
         frame.setAlwaysOnTop(false);
-
     }
 
-    // Funkcija, kuri konvertuoja RGB reikšmes į 8-bitų dvejetainį formatą
+    // Funkcija, kuri konvertuoja RGB reikšmes į 8-bitų binary formatą
     public static String convertToBinaryWithRGB(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
@@ -420,7 +390,7 @@ public class ReedMuller {
                 int g = color.getGreen();
                 int b = color.getBlue();
 
-                // Konvertuojame kiekvieną komponentą į 8-bitų dvejetainį formatą
+                // Konvertuojame kiekvieną komponentą į 8-bitų binary formatą
                 binaryImageSB.append(String.format("%8s", Integer.toBinaryString(r)).replace(' ', '0')); // Raudonas kanalas
                 binaryImageSB.append(String.format("%8s", Integer.toBinaryString(g)).replace(' ', '0')); // Žalias kanalas
                 binaryImageSB.append(String.format("%8s", Integer.toBinaryString(b)).replace(' ', '0')); // Mėlynas kanalas
@@ -449,8 +419,8 @@ public class ReedMuller {
             // Patikriname, ar liko pakankamai bitų (8 bitai)
             if (i + 8 <= binaryString.length()) {
                 String byteString = binaryString.substring(i, i + 8);  // Paimame 8 bitų grupę
-                int charCode = Integer.parseInt(byteString, 2);  // Konvertuojame į skaičių
-                result.append((char) charCode);  // Pridedame simbolį į rezultatą
+                int charCode = Integer.parseInt(byteString, 2);        // Konvertuojame į skaičių
+                result.append((char) charCode);                        // Pridedame simbolį į rezultatą
             }
         }
         return result.toString();
@@ -539,7 +509,7 @@ public class ReedMuller {
         // Pirmoji eilutė pilna vienetų
         Arrays.fill(generatorMatrix[0], 1);
 
-        // Kitos eilutės atitinka dvejetainius derinius
+        // Kitos eilutės atitinka binary derinius
         for (int i = 0; i < m; i++) {
             int period = (int) Math.pow(2, m - i - 1);
             for (int j = 0; j < columns; j++) {
@@ -564,31 +534,28 @@ public class ReedMuller {
         return encoded;
     }
 
-    // Funkcija, kuri siunčia vektorių per nepatikimą kanalą
-    private static int[] transmitVector(int[] vector, double pe) {
-        Random random = new Random();
-        int[] transmitted = Arrays.copyOf(vector, vector.length);
+    private static Random random = new Random();
 
+    // Funkcija vektoriui perduoti per nepatikimą kanalą
+    private static void transmitVector(int[] vector, double pe) {
         for (int i = 0; i < vector.length; i++) {
             if (random.nextDouble() < pe) {
-                transmitted[i] = 1 - transmitted[i]; // apverčiame bitą
+                vector[i] ^= 1; // Apverčiame bitą
             }
         }
-        return transmitted;
     }
 
     // Funkcija, kuri dekoduoja vektorių naudodama greitąją Hadamardo transformacijos funkciją
     private static int[] decodeVector(int[] receivedVector, int m) {
         int n = receivedVector.length;
 
-        // Mapinimas: 0 -> 1 ir 1 -> -1
-        double[] mapped = new double[n];
+        double[] transformed = new double[n];
         for (int i = 0; i < n; i++) {
-            mapped[i] = (receivedVector[i] == 0) ? 1.0 : -1.0;
+            // Mapiname 0 -> 1 ir 1 -> -1
+            transformed[i] = (receivedVector[i] == 0) ? 1.0 : -1.0;
         }
 
-        // Atliekame greitąją Hadamardo transformaciją
-        double[] transformed = fastHadamardTransform(mapped);
+        fastHadamardTransform(transformed);
 
         // Surandame max reikšmę ir jos indeksą
         double maxVal = Math.abs(transformed[0]);
@@ -614,25 +581,19 @@ public class ReedMuller {
         return infoBits;
     }
 
-    // Funkcija, kuri atlieką greitąją Hadamardo transformaciją
-    private static double[] fastHadamardTransform(double[] a) {
-        int n = a.length;
-
-        // Kopijuojame pradinį vektorių
-        double[] A = Arrays.copyOf(a, n);
-
-        // Atlikame FHT
-        for (int step = 1; step < n; step <<= 1) {  // Nurodo kiek elementų apdorojame vienu metu
-            for (int i = 0; i < n; i += 2 * step) { // Nurodo pradžią kiekvienai grupei
-                for (int j = 0; j < step; j++) {    // Apdorojame 'step' elementų poras
-                    double u = A[i + j];            // Pirmas elementas poroje
-                    double v = A[i + j + step];     // Antras elementas poroje
-                    A[i + j] = u + v;               // Sumuojame poras ir įrašome į pirmą vietą
-                    A[i + j + step] = u - v;        // Atimame poras ir ir įrašome į antrą vietą
+    // Greitoji Hadamardo transformacijos funkcija
+    private static void fastHadamardTransform(double[] data) {
+        int n = data.length;
+        for (int size = 2; size <= n; size *= 2) {
+            for (int i = 0; i < n; i += size) {
+                for (int j = 0; j < size / 2; j++) {
+                    double a = data[i + j];
+                    double b = data[i + j + size / 2];
+                    data[i + j] = a + b;
+                    data[i + j + size / 2] = a - b;
                 }
             }
         }
-        return A;
     }
 
     // Funkcija, kuri išprintina matricą
