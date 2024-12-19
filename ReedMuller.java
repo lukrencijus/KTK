@@ -150,7 +150,7 @@ public class ReedMuller {
                 inputText.deleteCharAt(0);
                 inputText.setLength(inputText.length() - 1);
 
-                // Paverčiame vartotojas įvestą tekstą į binary ASCII
+                // Paverčiame vartotojo įvestą tekstą į binary ASCII
                 String binaryText = textToBinary(inputText.toString());
 
                 // Suskaidome jau binary tekstą į vektorius ilgio 2^m
