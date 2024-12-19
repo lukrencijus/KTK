@@ -237,7 +237,7 @@ public class ReedMuller {
                         BufferedImage image = ImageIO.read(selectedFile);
 
                         // Konvertuojame paveikslėlį į binary formatą
-                        int[][] binaryImage = convertToBinary(image);
+                        int[][][] binaryImage = convertToBinaryWithRGB(image);
 
                         // Parodome originalų paveikslėlį
                         ImageIcon imageIcon = new ImageIcon(image);
@@ -247,9 +247,11 @@ public class ReedMuller {
 
                         // Sukuriame StringBuilder ir užpildome jį binary duomenimis
                         StringBuilder binaryImageSB = new StringBuilder();
-                        for (int[] row : binaryImage) {
-                            for (int value : row) {
-                                binaryImageSB.append(value);  // Pridedame kiekvieną 0 arba 1 reikšmę
+                        for (int y = 0; y < binaryImage.length; y++) {
+                            for (int x = 0; x < binaryImage[y].length; x++) {
+                                for (int c = 0; c < 3; c++) { // 3 spalvų kanalai: R, G, B
+                                    binaryImageSB.append(binaryImage[y][x][c]);
+                                }
                             }
                         }
 
@@ -319,10 +321,12 @@ public class ReedMuller {
                         int height = image.getHeight();
 
                         // Sukuriame paveikslėlį iš jau binary stringo
-                        image = createImageFromBinaryString(stringBinaryImage, width, height);
+                        int[][][] decodedBinaryImage = convertBinaryStringToRGB(stringBinaryImage, width, height);
 
                         // Atvaizduojame paveikslėlį
-                        displayImage(image);
+                        // Atvaizduojame dekoduotą paveikslėlį
+                        BufferedImage decodedImage = createImageFromBinaryRGB(decodedBinaryImage, width, height);
+                        displayImage(decodedImage);
                         System.out.println("\nRodomas dekoduotas paveikslėlis");
                         frame.setAlwaysOnTop(true);
                         frame.toFront();
@@ -345,29 +349,39 @@ public class ReedMuller {
         } // Baigiasi switch
     }
 
+    // Funkcija, kuri konvertuoja dvejetainę eilutę atgal į RGB formą
+    public static int[][][] convertBinaryStringToRGB(String binaryImage, int width, int height) {
+        int[][][] binaryImageRGB = new int[height][width][3];
+        int index = 0;
 
-
-    // Funkcija kuri sukuria paveikslėlį iš bitų sekos
-    public static BufferedImage createImageFromBinaryString(String binaryString, int width, int height) {
-        // Sukuriame BufferedImage su nurodytu ilgiu ir aukščiu
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-        // Tikriname, ar bitų seka atitinka paveikslėlio dydį
-        if (binaryString.length() != width * height) {
-            throw new IllegalArgumentException("Bitų sekos ilgis turi atitikti paveikslėlio dydį");
-        }
-
-        // Užpildome paveikslėlį pikselių reikšmėmis pagal bitų seką
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                int index = i * width + j;
-                char bit = binaryString.charAt(index);
-
-                // Jeigu bitas 1 - balta, jeigu 0 - juoda
-                int color = (bit == '1') ? Color.WHITE.getRGB() : Color.BLACK.getRGB();
-                image.setRGB(j, i, color);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                for (int c = 0; c < 3; c++) { // RGB kanalai
+                    binaryImageRGB[y][x][c] = Integer.parseInt(binaryImage.substring(index, index + 1));
+                    index++;
+                }
             }
         }
+        return binaryImageRGB;
+    }
+
+    // Funkcija, kuri konvertuoja dvejetainį formatą atgal į spalvotą paveikslėlį
+    public static BufferedImage createImageFromBinaryRGB(int[][][] binaryImage, int width, int height) {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Atstatome RGB reikšmes pagal dvejetainius duomenis
+                int r = binaryImage[y][x][0] * 255; // Jei 1, tada 255, kitaip 0
+                int g = binaryImage[y][x][1] * 255;
+                int b = binaryImage[y][x][2] * 255;
+
+                // Sudarome spalvą
+                Color color = new Color(r, g, b);
+                image.setRGB(x, y, color.getRGB());
+            }
+        }
+
         return image;
     }
 
@@ -393,34 +407,24 @@ public class ReedMuller {
 
     }
 
-    // Funkcija, kuri konvertuoja paveikslėlį į binary formatą (1 - balta, 0 - juoda)
-    public static int[][] convertToBinary(BufferedImage image) {
+    // Funkcija, kuri konvertuoja RGB paveikslėlį į dvejetainį formatą
+    public static int[][][] convertToBinaryWithRGB(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
-        int[][] binaryImage = new int[height][width];
+        int[][][] binaryImage = new int[height][width][3]; // 3 kanalai: R, G, B
 
-        // Slenkstis binarizacijai
-        int threshold = 128;
-
-        // Pereiname per visus pikselius ir atliekame binarizaciją
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                // Gauname pikselio spalvą
-                int pixel = image.getRGB(x, y);
-                // Išskiriame raudoną, žalią ir mėlyną kanalus (RGB)
-                int red = (pixel >> 16) & 0xff;
-                int green = (pixel >> 8) & 0xff;
-                int blue = pixel & 0xff;
+                // Gauname RGB reikšmes iš paveikslėlio
+                Color color = new Color(image.getRGB(x, y));
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
 
-                // Konvertuojame į pilką atspalvį
-                int gray = (red + green + blue) / 3;
-
-                // Binarizacija pagal nustatytą slenkstį
-                if (gray > threshold) {
-                    binaryImage[y][x] = 1;  // Balta (1)
-                } else {
-                    binaryImage[y][x] = 0;  // Juoda (0)
-                }
+                // Naudojame slenkstį (pvz., 128) ir konvertuojame į dvejetainį formatą
+                binaryImage[y][x][0] = (r > 128) ? 1 : 0; // Raudonas
+                binaryImage[y][x][1] = (g > 128) ? 1 : 0; // Žalias
+                binaryImage[y][x][2] = (b > 128) ? 1 : 0; // Mėlynas
             }
         }
         return binaryImage;
