@@ -598,55 +598,66 @@ public class ReedMuller {
         }
     }
 
-    // Funkcija, kuri dekoduoja vektorių naudodama greitąją Hadamardo transformacijos funkciją
+    // Function to decode a vector using the recursive decoding algorithm for RM(1, m)
     private static int[] decodeVector(int[] receivedVector, int m) {
         int n = receivedVector.length;
 
-        double[] transformed = new double[n];
+        // Step 1: Replace 0 with 1 and 1 with -1
+        double[] w = new double[n];
         for (int i = 0; i < n; i++) {
-            // Mapiname 0 -> 1 ir 1 -> -1
-            transformed[i] = (receivedVector[i] == 0) ? 1.0 : -1.0;
+            w[i] = (receivedVector[i] == 0) ? 1.0 : -1.0;
         }
 
-        fastHadamardTransform(transformed);
+        // Perform the recursive decoding
+        double[][] intermediateResults = new double[m + 1][n];
+        intermediateResults[0] = w;
 
-        // Surandame max reikšmę ir jos indeksą
-        double maxVal = Math.abs(transformed[0]);
+        for (int i = 1; i <= m; i++) {
+            intermediateResults[i] = computeHadamardTransform(intermediateResults[i - 1]);
+        }
+
+        // Step 2: Find the position of the largest component (in absolute value) in the final result
+        double[] wm = intermediateResults[m];
         int maxIndex = 0;
-        for (int i = 1; i < transformed.length; i++) {
-            double currentAbs = Math.abs(transformed[i]);
-            if (currentAbs > maxVal) {
-                maxVal = currentAbs;
+        double maxVal = Math.abs(wm[0]);
+        for (int i = 1; i < n; i++) {
+            if (Math.abs(wm[i]) > maxVal) {
+                maxVal = Math.abs(wm[i]);
                 maxIndex = i;
             }
         }
 
-        // Atkuriame informacijos bitus
-        int[] infoBits = new int[m + 1];
+        // Step 3: Determine the presumed message
+        int[] decodedMessage = new int[m + 1];
 
-        // Nustatome infoBits[0] pagal max reikšmės ženklą
-        infoBits[0] = (transformed[maxIndex] >= 0) ? 0 : 1;
+        // The sign of the largest component determines the first bit
+        decodedMessage[0] = (wm[maxIndex] >= 0) ? 0 : 1;
 
-        // infoBits[1] iki infoBits[m] nustatome iš maksimalaus indekso bitų reprezentacijos (nuo MSB iki LSB)
+        // The binary representation of maxIndex determines the remaining bits
         for (int i = 1; i <= m; i++) {
-            infoBits[i] = (maxIndex >> (m - i)) & 1;
+            decodedMessage[i] = (maxIndex >> (m - i)) & 1;
         }
-        return infoBits;
+
+        return decodedMessage;
     }
 
-    // Greitoji Hadamardo transformacijos funkcija
-    private static void fastHadamardTransform(double[] data) {
+    // Compute the Hadamard transform using recursive matrix multiplication
+    private static double[] computeHadamardTransform(double[] data) {
         int n = data.length;
+        double[] result = data.clone();
+
         for (int size = 2; size <= n; size *= 2) {
             for (int i = 0; i < n; i += size) {
                 for (int j = 0; j < size / 2; j++) {
-                    double a = data[i + j];
-                    double b = data[i + j + size / 2];
-                    data[i + j] = a + b;
-                    data[i + j + size / 2] = a - b;
+                    double a = result[i + j];
+                    double b = result[i + j + size / 2];
+                    result[i + j] = a + b;
+                    result[i + j + size / 2] = a - b;
                 }
             }
         }
+
+        return result;
     }
 
     // Funkcija, kuri išprintina matricą
