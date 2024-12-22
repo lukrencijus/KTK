@@ -598,54 +598,135 @@ public class ReedMuller {
         }
     }
 
-    // Funkcija, kuri dekoduoja vektorių naudodama greitąją Hadamardo transformacijos funkciją
+    // Funkcija, kuri dekoduoja gautą vektorių, pagal RM(1, m) dekodavimą esantį literatūroje.
+
+    /**
+     * Dekoduoja gautą vektorių, naudodamas RM(1, m) kodą.
+     *
+     * @param receivedVector - gautas vektorius (užkoduotas su galimomis klaidomis).
+     * @param m - RM(1, m) kodo parametras, nurodantis matricos dimensiją.
+     * @return - dekoduotas bitų masyvas su pataisytomis klaidomis.
+     */
     private static int[] decodeVector(int[] receivedVector, int m) {
         int n = receivedVector.length;
 
+        // 1. Pakeičiame 0 į -1
         double[] w = new double[n];
         for (int i = 0; i < n; i++) {
-            // Mapiname 0 -> 1 ir 1 -> -1
-            w[i] = (receivedVector[i] == 0) ? 1.0 : -1.0;
+            w[i] = (receivedVector[i] == 0) ? -1.0 : 1.0;
         }
 
-        fastHadamardTransform(w);
+        // 2. Apskaičiuojame Hadamardo matricas
+        int[][] H = generateHadamardMatrix(m);
 
-        // Surandame max reikšmę ir jos indeksą
-        double maxVal = Math.abs(w[0]);
+        // 3. Rekursyviai apskaičiuojame w1, w2, ..., wm
+        for (int i = 1; i <= m; i++) {
+            w = multiplyWithHadamard(w, H);
+        }
+
+        // 4. Randame didžiausią reikšmę ir jos indeksą
+        int maxIndex = findMaxIndex(w);
+
+        // 5. Dekoduojame žinutę iš indekso, koreguojant klaidas
+        return decodeMessageWithErrorCorrection(maxIndex, m, w[maxIndex]);
+    }
+
+    /**
+     * Generuoja Hadamardo matricą RM(1, m) kodui.
+     *
+     * @param m - Hadamardo matricos dimensija (kuri atitinka RM(1, m)).
+     * @return - 2^m x 2^m dydžio Hadamardo matrica.
+     */
+    private static int[][] generateHadamardMatrix(int m) {
+        int size = (int) Math.pow(2, m);
+        int[][] H = new int[size][size];
+        H[0][0] = 1;
+        for (int k = 1; k < size; k *= 2) {
+            for (int i = 0; i < k; i++) {
+                for (int j = 0; j < k; j++) {
+                    H[i + k][j] = H[i][j];
+                    H[i][j + k] = H[i][j];
+                    H[i + k][j + k] = -H[i][j];
+                }
+            }
+        }
+
+        for (int i = 0; i < size; i++) {
+            System.out.println(Arrays.toString(H[i]));
+        }
+
+
+        return H;
+    }
+
+    /**
+     * Atlieka vektoriaus daugybą su Hadamardo matrica.
+     *
+     * @param w - įvesties vektorius (modifikuotas gautas vektorius).
+     * @param H - Hadamardo matrica.
+     * @return - naujas vektorius po sandaugos su Hadamardo matrica.
+     */
+    private static double[] multiplyWithHadamard(double[] w, int[][] H) {
+        int n = w.length;
+        double[] result = new double[n];
+        for (int i = 0; i < n; i++) {
+            result[i] = 0;
+            for (int j = 0; j < n; j++) {
+                result[i] += w[j] * H[i][j];
+            }
+        }
+        System.out.println("Rezultatas po daugybos: " + Arrays.toString(result));
+        return result;
+    }
+
+    /**
+     * Suranda didžiausios absoliučios reikšmės indeksą vektoriuje.
+     *
+     * @param w - vektorius, kurio didžiausią komponentą reikia rasti.
+     * @return - indekso reikšmė su didžiausiu absoliučiu komponentu.
+     */
+    private static int findMaxIndex(double[] w) {
         int maxIndex = 0;
+        double maxValue = Math.abs(w[0]);
         for (int i = 1; i < w.length; i++) {
-            double currentAbs = Math.abs(w[i]);
-            if (currentAbs > maxVal) {
-                maxVal = currentAbs;
+            if (Math.abs(w[i]) > maxValue) {
+                maxValue = Math.abs(w[i]);
                 maxIndex = i;
             }
         }
-
-        // Atkuriame informacijos bitus
-        int[] decodedMessage = new int[m + 1];
-
-        // Nustatome decodedMessage[0] pagal max reikšmės ženklą
-        decodedMessage[0] = (w[maxIndex] >= 0) ? 0 : 1;
-
-        // decodedMessage[1] iki decodedMessage[m] nustatome iš maksimalaus indekso bitų reprezentacijos (nuo MSB iki LSB)
-        for (int i = 1; i <= m; i++) {
-            decodedMessage[i] = (maxIndex >> (m - i)) & 1;
-        }
-        return decodedMessage;
+        System.out.println("Didžiausios reikšmės indeksas: " + maxIndex + ", reikšmė: " + maxValue);
+        return maxIndex;
     }
 
-    // Greitoji Hadamardo transformacijos funkcija
-    private static void fastHadamardTransform(double[] data) {
-        int n = data.length;
-        for (int size = 2; size <= n; size *= 2) {
-            for (int i = 0; i < n; i += size) {
-                for (int j = 0; j < size / 2; j++) {
-                    double a = data[i + j];
-                    double b = data[i + j + size / 2];
-                    data[i + j] = a + b;
-                    data[i + j + size / 2] = a - b;
-                }
-            }
+    /**
+     * Atkuria dekoduotą pranešimą iš didžiausios reikšmės indekso,
+     * koreguojant galimas klaidas.
+     *
+     * @param maxIndex - didžiausios reikšmės indeksas.
+     * @param m - RM(1, m) dimensija.
+     * @param maxValue - didžiausios reikšmės reikšmė (naudojama ženklui nustatyti).
+     * @return - dekoduotas pranešimas kaip bitų masyvas.
+     */
+    private static int[] decodeMessageWithErrorCorrection(int maxIndex, int m, double maxValue) {
+        // Konvertuojame maxIndex į m-bitų dvejetainį formatą
+        int[] message = new int[m];
+        for (int i = 0; i < m; i++) {
+            message[m - 1 - i] = (maxIndex >> i) & 1; // Gautas bitas iš maxIndex
+        }
+
+        // Koreguojame klaidas: tikriname, ar reikšmė yra teigiama ar neigiama
+        if (maxValue < 0) {
+            // Jei reikšmė yra neigiama, pridėti ženklą 0
+            int[] finalMessage = new int[m + 1];
+            finalMessage[0] = 0; // Neigiamas ženklas
+            System.arraycopy(message, 0, finalMessage, 1, m);
+            return finalMessage;
+        } else {
+            // Jei reikšmė yra teigiama, pridėti ženklą 1
+            int[] finalMessage = new int[m + 1];
+            finalMessage[0] = 1; // Teigiamas ženklas
+            System.arraycopy(message, 0, finalMessage, 1, m);
+            return finalMessage;
         }
     }
 
