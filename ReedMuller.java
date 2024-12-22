@@ -598,11 +598,8 @@ public class ReedMuller {
         }
     }
 
-    // Funkcija, kuri dekoduoja gautą vektorių, pagal RM(1, m) dekodavimą.
-
     /**
      * Dekoduoja gautą vektorių, naudodamas RM(1, m) kodą.
-     * Pataiso iki t = (2^(m-1) - 1) klaidų pagal Hadamardo matricą.
      *
      * @param receivedVector - gautas vektorius (užkoduotas su galimomis klaidomis).
      * @param m - RM(1, m) kodo parametras, nurodantis matricos dimensiją.
@@ -658,7 +655,7 @@ public class ReedMuller {
     }
 
     /**
-     * Atlieka vektoriaus daugybą su Hadamardo matrica, naudojant greitąją Hadamardo transformaciją.
+     * Atlieka vektoriaus daugybą su Hadamardo matrica.
      *
      * @param w - įvesties vektorius (modifikuotas gautas vektorius).
      * @param H - Hadamardo matrica.
@@ -667,24 +664,12 @@ public class ReedMuller {
     private static double[] multiplyWithHadamard(double[] w, int[][] H) {
         int n = w.length;
         double[] result = new double[n];
-
-        // Greitoji Hadamardo transformacija
         for (int i = 0; i < n; i++) {
-            result[i] = w[i]; // Kopijuojame pradinius reikšmes į rezultatą
-        }
-
-        // Atlikti rekursyvų FHT
-        for (int len = 2; len <= n; len *= 2) { // Kiekvienam žingsniui len turi būti 2, 4, 8, ..., n
-            for (int i = 0; i < n; i += len) {
-                for (int j = 0; j < len / 2; j++) {
-                    // Atlikti atitinkamą Hadamardo operaciją: sujungti ir išskirti elementus
-                    double temp = result[i + j];
-                    result[i + j] = result[i + j] + result[i + j + len / 2];
-                    result[i + j + len / 2] = temp - result[i + j + len / 2];
-                }
+            result[i] = 0;
+            for (int j = 0; j < n; j++) {
+                result[i] += w[j] * H[i][j];
             }
         }
-
         return result;
     }
 
