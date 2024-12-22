@@ -13,7 +13,7 @@ public class ReedMuller {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Paprašome vartotojo pasirinkti ką jis nori daryti
+        // Paprašome vartotojo pasirinkti ką jis nori atlikti
         System.out.println("\n");
         System.out.println("Pasirinkite scenarijų:" +
                 "\n [1] užrašyti vektorių" +
@@ -73,7 +73,7 @@ public class ReedMuller {
                 int[] encodedVector = encodeVector(inputVector, generatorMatrix);
                 System.out.println("Užkoduotas vektorius:");
                 System.out.println(Arrays.toString(encodedVector));
-                // pasidarome kopiją, kad palyginti su iš kanalo išėjusiu vektoriumi
+                // Pasidarome kopiją, kad palyginti su iš kanalo išėjusiu vektoriumi
                 int[] testVector = Arrays.copyOf(encodedVector, encodedVector.length);
 
                 // Siunčiame vektorių per nepatikimą kanalą
@@ -469,7 +469,7 @@ public class ReedMuller {
         String binaryString = binaryStringBuilder.toString();
 
         for (int i = 0; i < binaryString.length(); i += 8) {
-            // Patikriname, ar liko pakankamai bitų (8 bitai)
+            // Patikriname, ar liko pakankamai bitų
             if (i + 8 <= binaryString.length()) {
                 String byteString = binaryString.substring(i, i + 8);  // Paimame 8 bitų grupę
                 int charCode = Integer.parseInt(byteString, 2);        // Konvertuojame į skaičių
@@ -598,47 +598,36 @@ public class ReedMuller {
         }
     }
 
-    /**
-     * Dekoduoja gautą vektorių, naudodamas RM(1, m) kodą.
-     *
-     * @param receivedVector - gautas vektorius (užkoduotas su galimomis klaidomis).
-     * @param m - RM(1, m) kodo parametras, nurodantis matricos dimensiją.
-     * @return - dekoduotas bitų masyvas su pataisytomis klaidomis.
-     */
+    // Funkcija, kuri dekoduoja gautą vektorių dauginant vektorių su Hadamardo matrica
     private static int[] decodeVector(int[] receivedVector, int m) {
         int n = receivedVector.length;
 
-        // 1. Pakeičiame 0 į -1 (pagal Hadamardo dekodavimo logiką)
+        // Pakeičiame 0 į -1, o 1 nekeičiame
         double[] w = new double[n];
         for (int i = 0; i < n; i++) {
             w[i] = (receivedVector[i] == 0) ? -1.0 : 1.0;
         }
 
-        // 2. Generuojame Hadamardo matricą (RM(1, m))
+        // Generuojame Hadamardo matricą
         int[][] H = generateHadamardMatrix(m);
 
-        // 3. Dauginame vektorių su Hadamardo matrica
+        // Dauginame vektorių su Hadamardo matrica
         w = multiplyWithHadamard(w, H);
 
-        // 4. Randame didžiausią reikšmę ir jos indeksą
+        // Randame didžiausią reikšmę ir jos indeksą
         int maxIndex = findMaxIndex(w);
         double maxValue = w[maxIndex];
 
-        // 5. Dekoduojame pranešimą iš indekso ir taisome klaidas
+        // Dekoduojame pranešimą iš indekso ir taisome klaidas
         int[] decodedMessage = decodeMessageWithErrorCorrection(maxIndex, m, maxValue);
 
         return decodedMessage;
     }
 
-    /**
-     * Generuoja Hadamardo matricą RM(1, m) kodui.
-     * Hadamardo matrica generuojama rekursyviai.
-     *
-     * @param m - Hadamardo matricos dimensija (kuri atitinka RM(1, m)).
-     * @return - 2^m x 2^m dydžio Hadamardo matrica.
-     */
+
+    // Funkcija, kuri generuoja Hadamardo matricą
     private static int[][] generateHadamardMatrix(int m) {
-        int size = (int) Math.pow(2, m); // 2^m dydžio matrica
+        int size = (int) Math.pow(2, m);               // 2^m dydžio matrica
         int[][] H = new int[size][size];
         H[0][0] = 1;
         for (int k = 1; k < size; k *= 2) {
@@ -650,17 +639,10 @@ public class ReedMuller {
                 }
             }
         }
-
         return H;
     }
 
-    /**
-     * Atlieka vektoriaus daugybą su Hadamardo matrica.
-     *
-     * @param w - įvesties vektorius (modifikuotas gautas vektorius).
-     * @param H - Hadamardo matrica.
-     * @return - naujas vektorius po sandaugos su Hadamardo matrica.
-     */
+    // Funkcija, kuri atlieka vektoriaus daugybą su Hadamardo matrica
     private static double[] multiplyWithHadamard(double[] w, int[][] H) {
         int n = w.length;
         double[] result = new double[n];
@@ -673,12 +655,7 @@ public class ReedMuller {
         return result;
     }
 
-    /**
-     * Suranda didžiausios absoliučios reikšmės indeksą vektoriuje.
-     *
-     * @param w - vektorius, kurio didžiausią komponentą reikia rasti.
-     * @return - indekso reikšmė su didžiausiu absoliučiu komponentu.
-     */
+    // Funkcija, kuri suranda didžiausios reikšmės indeksą vektoriuje
     private static int findMaxIndex(double[] w) {
         int maxIndex = 0;
         double maxValue = Math.abs(w[0]);
@@ -691,31 +668,23 @@ public class ReedMuller {
         return maxIndex;
     }
 
-    /**
-     * Atkuria dekoduotą pranešimą iš didžiausios reikšmės indekso,
-     * koreguojant galimas klaidas.
-     *
-     * @param maxIndex - didžiausios reikšmės indeksas.
-     * @param m - RM(1, m) dimensija.
-     * @param maxValue - didžiausios reikšmės reikšmė (naudojama ženklui nustatyti).
-     * @return - dekoduotas pranešimas kaip bitų masyvas.
-     */
+    // Funkcija, kuri atkuria dekoduotą pranešimą iš didžiausios reikšmės indekso
     private static int[] decodeMessageWithErrorCorrection(int maxIndex, int m, double maxValue) {
-        // Konvertuojame maxIndex į m-bitų dvejetainį formatą
+        // Konvertuojame maxIndex į binary formatą
         int[] message = new int[m];
         for (int i = 0; i < m; i++) {
-            message[m - 1 - i] = (maxIndex >> i) & 1; // Gautas bitas iš maxIndex
+            message[m - 1 - i] = (maxIndex >> i) & 1;
         }
 
-        // Koreguojame klaidas: tikriname, ar reikšmė yra teigiama ar neigiama
+        // Tikriname, ar reikšmė yra teigiama ar neigiama
         if (maxValue < 0) {
-            // Jei reikšmė yra neigiama, pridėti ženklą 0
+            // Jeigu neigiama pridedame 0
             int[] finalMessage = new int[m + 1];
             finalMessage[0] = 0; // Neigiamas ženklas
             System.arraycopy(message, 0, finalMessage, 1, m);
             return finalMessage;
         } else {
-            // Jei reikšmė yra teigiama, pridėti ženklą 1
+            // Jeigu teigiama, pridedame 1
             int[] finalMessage = new int[m + 1];
             finalMessage[0] = 1; // Teigiamas ženklas
             System.arraycopy(message, 0, finalMessage, 1, m);
