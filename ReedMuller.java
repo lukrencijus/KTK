@@ -598,10 +598,11 @@ public class ReedMuller {
         }
     }
 
-    // Funkcija, kuri dekoduoja gautą vektorių, pagal RM(1, m) dekodavimą esantį literatūroje.
+    // Funkcija, kuri dekoduoja gautą vektorių, pagal RM(1, m) dekodavimą.
 
     /**
      * Dekoduoja gautą vektorių, naudodamas RM(1, m) kodą.
+     * Pataiso iki t = (2^(m-1) - 1) klaidų pagal Hadamardo matricą.
      *
      * @param receivedVector - gautas vektorius (užkoduotas su galimomis klaidomis).
      * @param m - RM(1, m) kodo parametras, nurodantis matricos dimensiją.
@@ -610,51 +611,48 @@ public class ReedMuller {
     private static int[] decodeVector(int[] receivedVector, int m) {
         int n = receivedVector.length;
 
-        // 1. Pakeičiame 0 į -1
+        // 1. Pakeičiame 0 į -1 (pagal Hadamardo dekodavimo logiką)
         double[] w = new double[n];
         for (int i = 0; i < n; i++) {
             w[i] = (receivedVector[i] == 0) ? -1.0 : 1.0;
         }
 
-        // 2. Apskaičiuojame Hadamardo matricas
+        // 2. Generuojame Hadamardo matricą (RM(1, m))
         int[][] H = generateHadamardMatrix(m);
 
-        // 3. Rekursyviai apskaičiuojame w1, w2, ..., wm
-        for (int i = 1; i <= m; i++) {
-            w = multiplyWithHadamard(w, H);
-        }
+        // 3. Dauginame vektorių su Hadamardo matrica
+        w = multiplyWithHadamard(w, H);
 
         // 4. Randame didžiausią reikšmę ir jos indeksą
         int maxIndex = findMaxIndex(w);
+        double maxValue = w[maxIndex];
 
-        // 5. Dekoduojame žinutę iš indekso, koreguojant klaidas
-        return decodeMessageWithErrorCorrection(maxIndex, m, w[maxIndex]);
+        // 5. Dekoduojame pranešimą iš indekso ir taisome klaidas
+        int[] decodedMessage = decodeMessageWithErrorCorrection(maxIndex, m, maxValue);
+
+        return decodedMessage;
     }
 
     /**
      * Generuoja Hadamardo matricą RM(1, m) kodui.
+     * Hadamardo matrica generuojama rekursyviai.
      *
      * @param m - Hadamardo matricos dimensija (kuri atitinka RM(1, m)).
      * @return - 2^m x 2^m dydžio Hadamardo matrica.
      */
     private static int[][] generateHadamardMatrix(int m) {
-        int size = (int) Math.pow(2, m);
+        int size = (int) Math.pow(2, m); // 2^m dydžio matrica
         int[][] H = new int[size][size];
         H[0][0] = 1;
         for (int k = 1; k < size; k *= 2) {
             for (int i = 0; i < k; i++) {
                 for (int j = 0; j < k; j++) {
-                    H[i + k][j] = H[i][j];
-                    H[i][j + k] = H[i][j];
-                    H[i + k][j + k] = -H[i][j];
+                    H[i + k][j] = H[i][j];             // Apatinė kairė dalis
+                    H[i][j + k] = H[i][j];             // Viršutinė dešinė dalis
+                    H[i + k][j + k] = -H[i][j];        // Apatinė dešinė dalis
                 }
             }
         }
-
-        for (int i = 0; i < size; i++) {
-            System.out.println(Arrays.toString(H[i]));
-        }
-
 
         return H;
     }
@@ -675,7 +673,6 @@ public class ReedMuller {
                 result[i] += w[j] * H[i][j];
             }
         }
-        System.out.println("Rezultatas po daugybos: " + Arrays.toString(result));
         return result;
     }
 
@@ -694,7 +691,6 @@ public class ReedMuller {
                 maxIndex = i;
             }
         }
-        System.out.println("Didžiausios reikšmės indeksas: " + maxIndex + ", reikšmė: " + maxValue);
         return maxIndex;
     }
 
