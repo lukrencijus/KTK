@@ -1,4 +1,3 @@
-Lukas Šerelis
 A5 užduotis
 
 ---
