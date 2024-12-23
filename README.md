@@ -10,11 +10,8 @@ A5 užduotis
 	- Arba vykdykite failą `ReedMuller.java` savo programavimo aplinkoje
 		- Arba galima atidaryti komandinę eilutę ten kur yra failas `ReedMuller.java` ir joje įvesti: `javac ReedMuller.java && java ReedMuller`
 	- Arba vykdykite failą `KTK.bat`
-	- Norint, kad programa dekoduotų paveikslėlį kai m>5 gali reikti paleisti programą naudojant: `java -Xms2g -Xmx4g -jar KTK.jar` (plačiau apie tai [[#Kodo paveikslėlio pilnas apdorojimo efektyvumas]])
----
-```table-of-contents
-```
-<div class="page-break" style="page-break-before: always;"></div>
+	- Norint, kad programa dekoduotų paveikslėlį kai m>5 gali reikti paleisti programą naudojant: `java -Xms2g -Xmx4g -jar KTK.jar` (plačiau apie tai [Kodo paveikslėlio pilnas apdorojimo efektyvumas](#kodo-paveikslėlio-pilnas-apdorojimo-efektyvumas)
+
 
 # Vartotojo sąsaja
 - Paleidus programą vartotojas yra paprašomas pasirinkti vieną iš trijų variantų:
@@ -48,13 +45,12 @@ A5 užduotis
 - Jeigu vartotojas redagavo vektorių, tai programa į ekraną išveda naują vartotojo paredaguotą vektorių ir programa dar kartą patikrinama klaidų kiekį ir klaidų vietas, bet šį kartą lyginant užkoduotą vektorių ir vartotojo įvesta vektorių.
 - Programa iškviečia funkciją `decodeVector`, kuri kaip argumentus paima iš kanalo išėjusį vektorių (arba vartotojo paredaguotą vektorių) ir parametrą `m`, o grąžina dekoduotą vektorių.
 	- Ši funkcija dekoduoja gautą vektorių dauginant vektorių su Hadamardo matrica.
-	- Vektoriaus reikšmės yra pekeičiamos iš 0 į -1.
+	- Vektoriaus reikšmės yra pakeičiamos iš 0 į -1.
 	- Iškviečiame funkciją `generateHadamardMatrix`, kuri generuoja Hadamardo matricą ir kaip parametrą paima parametrą `m`, o grąžina Hadamardo matricą.
 	- Tuomet mes kviečiame funkciją `multiplyWithHadamard`, kuri kaip parametrus paima jau paredaguotą vektorių (iš 0 į -1) ir Hadamardo matricą, o grąžina naują vektorių po sandaugos su Hadamardo matrica.
 	- Toliau kviečiame funkciją `findMaxIndex`, kuri suranda didžiausios absoliučios reikšmės indeksą vektoriuje, o kaip parametrą paima vektorių po sandaugos su Hadamardo matrica.
 	- Galų gale iškviečiame funkciją `decodeMessageWithErrorCorrection`, kuri atkuria dekoduotą pranešimą iš didžiausios reikšmės indekso, kaip parametrą paima didžiausios reikšmės indeksą, parametrą `m`, didžiausios reikšmės reikšmę, o grąžina dekoduotą pranešimą kaip bitų masyvą.
 - Išspausdiname į ekraną dekoduotą vektorių.
-<div class="page-break" style="page-break-before: always;"></div>
 
 ## Antras scenarijus (užrašyti tekstą)
 - Vartotojas yra paprašomas įvesti kodo parametrą `m` Rydo-Miulerio kodui (1, m).
@@ -77,7 +73,6 @@ A5 užduotis
 	- Toliau kviečiame funkciją `findMaxIndex`, kuri suranda didžiausios absoliučios reikšmės indeksą vektoriuje, o kaip parametrą paima vektorių po sandaugos su Hadamardo matrica.
 	- Galų gale iškviečiame funkciją `decodeMessageWithErrorCorrection`, kuri atkuria dekoduotą pranešimą iš didžiausios reikšmės indekso, kaip parametrą paima didžiausios reikšmės indeksą, parametrą `m`, didžiausios reikšmės reikšmę, o grąžina dekoduotą pranešimą kaip bitų masyvą.
 - Programa išspausdina į ekraną palyginimui pradinį tekstą, atkurtą tekstą (siųstą neužkoduotą pro kanalą) ir atkurtą tekstą (siųstą užkoduotą pro kanalą).
-<div class="page-break" style="page-break-before: always;"></div>
 
 ## Trečias scenarijus (nurodyti paveiksliuką)
 - Vartotojas yra paprašomas įvesti kodo parametrą `m` Rydo-Miulerio kodui (1, m).
@@ -104,26 +99,28 @@ A5 užduotis
 - Programa iškviečia funkciją `createImageFromBinaryRGB`, kuri kaip argumentus ima dekoduotą vientisą stringą, paveikslėlio ilgį ir paveikslėlio aukštį, o grąžina jau sukurtą paveikslėlį.
 	- Išimame 8-bitų binary kodą kiekvienam RGB kanalui
 - Programa atvaizduoja dekoduotą paveikslėlį (kuris buvo neužkoduotas) ir dekoduotą paveikslėlį (kuris buvo užkoduotas).
-<div class="page-break" style="page-break-before: always;"></div>
 
 # Atlikti eksperimentai
 ## Kodo pataisomų klaidų skaičius
-![[Figure_1.webp]]
+![Figure_1](https://github.com/user-attachments/assets/bb340e2e-00b8-48bd-aa33-580dbcace176)
+
 
 ---
 ## Kodo dekodavimo efektyvumas
-![[Figure_2.webp]]
+![Figure_2](https://github.com/user-attachments/assets/f764c3c0-5ad0-4e12-8e83-588bfc58d20a)
 
 ---
-<div class="page-break" style="page-break-before: always;"></div>
 
 ## Kodo paveikslėlio pilnas apdorojimo efektyvumas
 Nurodytas laikas yra pilnas, tai reiškia nuo programos paleidimo iki paveikslėlio parodymo ekrane. Programa visus paleidimus buvo paleista naudojant default paleidimą: `java -jar KTK.jar` (išskyrus kai m=6, tada buvo paleista naudojant `java -Xms2g -Xmx4g -jar KTK.jar`) ir visada buvo nustatoma klaidos tikimybė 0,1.
+
 Norint, kad programa dekoduotų paveikslėlį kai m>5 gali reikti paleisti programą naudojant: `java -Xms2g -Xmx4g -jar KTK.jar`
 Paaiškinimas:
 `-Xms2g`: Nustato pradinį heap'o dydį iki 2 GB. Tai užtikrina, kad Java Virtuali Mašina pradės darbą su 2 GB heap'u.
 `-Xmx4g`: Nustato maksimalų heap'o dydį iki 4 GB. Tai leidžia Java Virtualiai Mašinai išplėsti heap'ą iki 4 GB, jei to prireikia.
-![[Figure_3.webp]]
+
+![Figure_3](https://github.com/user-attachments/assets/3bf0ca6c-7434-46a0-bb8c-402cafbf22b5)
+
 # Naudota literatūra
 - [Užduoties aptarimo vaizdo įrašas](https://emokymai.vu.lt/course/view.php?id=3389#section-5)
 - [HLL91, §3.8–3.9, p. 89–95](https://klevas.mif.vu.lt/~skersys/doc/ktkt/literatura13.pdf)
