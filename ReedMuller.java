@@ -393,7 +393,7 @@ public class ReedMuller {
     // Funkcija, kuri atvaizduoja dekoduotą paveikslėlį
     public static void displayImage(BufferedImage image) {
         // Sukuriame JFrame ir pridedame JLabel su paveikslėliu
-        JFrame frame = new JFrame("Atkurtas dekoduotas paveikslėlis");
+        JFrame frame = new JFrame("Atkurtas užkoduotas paveikslėlis");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         ImageIcon icon = new ImageIcon(image);
         JLabel label = new JLabel(icon);
@@ -413,7 +413,7 @@ public class ReedMuller {
     // Funkcija, kuri atvaizduoja nedekoduotą paveikslėlį
     public static void displayImage2(BufferedImage image) {
         // Sukuriame JFrame ir pridedame JLabel su paveikslėliu
-        JFrame frame = new JFrame("Atkurtas nedekoduotas paveikslėlis");
+        JFrame frame = new JFrame("Atkurtas neužkoduotas paveikslėlis");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         ImageIcon icon = new ImageIcon(image);
         JLabel label = new JLabel(icon);
